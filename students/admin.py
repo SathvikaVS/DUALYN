@@ -4,5 +4,6 @@ from .models import StudentProfile
 
 @admin.register(StudentProfile)
 class StudentProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'college', 'degree', 'graduation_year')
-    search_fields = ('user__username', 'college')
+    list_display = ('Full_name', 'Status', 'Education', 'Year_of_Study', 'College', 'Carrer_Interest')
+    list_filter = ('Status', 'Education', 'Carrer_Interest')
+    search_fields = ('Full_name', 'College')
