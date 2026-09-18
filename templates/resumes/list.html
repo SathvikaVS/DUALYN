@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>My Resumes</h2>
+<a href="{% url 'resumes:upload' %}">Upload New Resume</a>
+<ul>
+{% for resume in resumes %}
+    <li>
+        {{ resume.file.name }} — uploaded {{ resume.uploaded_at|date:"M d, Y" }}
+        <details><summary>View extracted text</summary><pre>{{ resume.extracted_text|truncatechars:500 }}</pre></details>
+    </li>
+{% empty %}
+    <li>No resumes uploaded yet.</li>
+{% endfor %}
+</ul>
+{% endblock %}
