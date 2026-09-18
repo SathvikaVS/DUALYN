@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>My Skills</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Skill</button>
+</form>
+<ul>
+{% for entry in declared %}
+    <li>{{ entry.skill.name }} — {{ entry.get_level_display }}
+        <a href="{% url 'skills:remove_skill' entry.pk %}">Remove</a>
+    </li>
+{% empty %}
+    <li>No skills added yet.</li>
+{% endfor %}
+</ul>
+{% endblock %}

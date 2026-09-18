@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Skill Gap Report: {{ analysis.job_role.title }}</h2>
+<p>Overall Readiness: <strong>{{ analysis.readiness_score }}%</strong></p>
+
+<h3>Skill Breakdown</h3>
+<ul>
+{% for gap in gaps %}
+    <li>
+        <strong>{{ gap.skill.name }}</strong> —
+        {{ gap.get_status_display }} —
+        Priority: {{ gap.get_priority_display }}
+        <br><small>{{ gap.reasoning }}</small>
+    </li>
+{% endfor %}
+</ul>
+{% endblock %}

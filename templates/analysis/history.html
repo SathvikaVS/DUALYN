@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>My Analysis History</h2>
+<a href="{% url 'analysis:run' %}">Run New Analysis</a>
+<ul>
+{% for a in analyses %}
+    <li><a href="{% url 'analysis:report' a.pk %}">{{ a.job_role.title }} — {{ a.readiness_score }}% — {{ a.created_at|date:"M d, Y" }}</a></li>
+{% empty %}
+    <li>No analyses yet.</li>
+{% endfor %}
+</ul>
+{% endblock %}
