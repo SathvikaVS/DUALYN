@@ -6,7 +6,7 @@ from .forms import StudentProfileForm
 
 @login_required
 def profile_view(request):
-    profile = request.user.profile
+    profile = request.user.student_profile
     if request.method == 'POST':
         form = StudentProfileForm(request.POST, instance=profile)
         if form.is_valid():
