@@ -11,7 +11,30 @@
         {{ gap.get_status_display }} —
         Priority: {{ gap.get_priority_display }}
         <br><small>{{ gap.reasoning }}</small>
+
+        {% for rec in gap.recommendations.all %}
+            <details><summary>Learning Steps</summary>
+                <ol>
+                {% for step in rec.steps %}
+                    <li>{{ step }}</li>
+                {% endfor %}
+                </ol>
+            </details>
+        {% endfor %}
     </li>
 {% endfor %}
 </ul>
+
+<h3>Learning Roadmap</h3>
+{% if analysis.roadmap %}
+    {% regroup analysis.roadmap.items.all by get_phase_display as phase_list %}
+    {% for phase in phase_list %}
+        <h4>{{ phase.grouper }}</h4>
+        <ul>
+        {% for item in phase.list %}
+            <li>{{ item.skill_gap.skill.name }}</li>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+{% endif %}
 {% endblock %}
