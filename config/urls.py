@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
+from core.views import dashboard_view
 
 
 urlpatterns = [
@@ -26,6 +27,7 @@ urlpatterns = [
     path('resumes/', include('resumes.urls')),
     path('skills/', include('skills.urls')),
     path('analysis/', include('analysis.urls')),
+    path('', dashboard_view, name='dashboard'),
 ]
 
 if settings.DEBUG:

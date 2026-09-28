@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Welcome, {{ display_name }}</h2>
+
+{% if latest %}
+    <h3>Latest Analysis: {{ latest.job_role.title }}</h3>
+    <p>Readiness: <strong>{{ latest.readiness_score }}%</strong></p>
+    <progress value="{{ latest.readiness_score }}" max="100"></progress>
+
+    <ul>
+        <li>Covered: {{ covered_count }}</li>
+        <li>Needs improvement: {{ improve_count }}</li>
+        <li>Missing: {{ missing_count }}</li>
+    </ul>
+
+    <h3>High-Priority Gaps</h3>
+    <ul>
+    {% for gap in high_priority %}
+        <li>{{ gap.skill.name }} ({{ gap.get_status_display }})</li>
+    {% empty %}
+        <li>No high-priority gaps. Nice work.</li>
+    {% endfor %}
+    </ul>
+
+    <h3>Recommended Next Skills</h3>
+    <ol>
+    {% for item in next_skills %}
+        <li>{{ item.skill_gap.skill.name }}</li>
+    {% empty %}
+        <li>Nothing pending.</li>
+    {% endfor %}
+    </ol>
+
+    <p><a href="{% url 'analysis:report' latest.pk %}">View full report</a></p>
+{% else %}
+    <p>You haven't run an analysis yet.</p>
+{% endif %}
+
+<h3>Quick Links</h3>
+<ul>
+    <li><a href="{% url 'analysis:run' %}">Run new analysis</a></li>
+    <li><a href="{% url 'skills:my_skills' %}">My skills</a></li>
+    <li><a href="{% url 'resumes:upload' %}">Upload resume</a></li>
+    <li><a href="{% url 'students:profile' %}">My profile</a></li>
+    <li><a href="{% url 'analysis:history' %}">Analysis history</a></li>
+</ul>
+
+<h3>Recent Analyses</h3>
+<ul>
+{% for a in recent %}
+    <li><a href="{% url 'analysis:report' a.pk %}">{{ a.job_role.title }}: {{ a.readiness_score }}% ({{ a.created_at|date:"M d, Y" }})</a></li>
+{% empty %}
+    <li>None yet.</li>
+{% endfor %}
+</ul>
+{% endblock %}
