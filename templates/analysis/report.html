@@ -3,6 +3,13 @@
 <h2>Skill Gap Report: {{ analysis.job_role.title }}</h2>
 <p>Overall Readiness: <strong>{{ analysis.readiness_score }}%</strong></p>
 
+{% if progress %}
+    <p>Since your previous analysis for this role ({{ previous.created_at|date:"M d, Y" }}):
+        <strong>{% if progress.score_change > 0 %}+{% endif %}{{ progress.score_change }} points</strong>,
+        {{ progress.improved_count }} skill(s) improved.
+        <a href="{% url 'analysis:compare' %}?old={{ previous.pk }}&new={{ analysis.pk }}">See details</a></p>
+{% endif %}
+
 <h3>Skill Breakdown</h3>
 <ul>
 {% for gap in gaps %}

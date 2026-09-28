@@ -2,6 +2,7 @@
 {% block content %}
 <h2>My Analysis History</h2>
 <a href="{% url 'analysis:run' %}">Run New Analysis</a>
+<a href="{% url 'analysis:compare' %}">Compare two analyses</a>
 <ul>
 {% for a in analyses %}
     <li><a href="{% url 'analysis:report' a.pk %}">{{ a.job_role.title }} — {{ a.readiness_score }}% — {{ a.created_at|date:"M d, Y" }}</a></li>

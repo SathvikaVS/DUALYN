@@ -4,6 +4,7 @@ from .forms import RunAnalysisForm
 from .models import SkillAnalysis
 from .services.gap_engine import run_analysis
 from recommendations.services.recommendation_engine import generate_recommendations
+from .services.progress import compare_analyses
 
 
 @login_required
@@ -22,8 +23,18 @@ def run_analysis_view(request):
 def report_view(request, pk):
     analysis = get_object_or_404(SkillAnalysis, pk=pk, student=request.user)
     gaps = analysis.gaps.select_related('skill').order_by('status', '-priority')
-    return render(request, 'analysis/report.html', {'analysis': analysis, 'gaps': gaps})
 
+    previous = request.user.analyses.filter(
+        job_role=analysis.job_role, created_at__lt=analysis.created_at
+    ).first()
+    progress = compare_analyses(previous, analysis) if previous else None
+
+    return render(request, 'analysis/report.html', {
+        'analysis': analysis,
+        'gaps': gaps,
+        'previous': previous,
+        'progress': progress,
+    })
 
 @login_required
 def history_view(request):
@@ -41,3 +52,25 @@ def run_analysis_view(request):
     else:
         form = RunAnalysisForm()
     return render(request, 'analysis/run.html', {'form': form})
+
+@login_required
+def compare_view(request):
+    analyses = request.user.analyses.select_related('job_role')
+    old_id = request.GET.get('old', '')
+    new_id = request.GET.get('new', '')
+    context = {'analyses': analyses}
+
+    if old_id and new_id:
+        if not (old_id.isdigit() and new_id.isdigit()):
+            context['error'] = "Please choose two analyses from the lists."
+        else:
+            old = get_object_or_404(SkillAnalysis, pk=old_id, student=request.user)
+            new = get_object_or_404(SkillAnalysis, pk=new_id, student=request.user)
+            context.update({
+                'old': old,
+                'new': new,
+                'result': compare_analyses(old, new),
+                'different_roles': old.job_role_id != new.job_role_id,
+            })
+
+    return render(request, 'analysis/compare.html', context)
