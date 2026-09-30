@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import ResumeUploadForm
 from .services.resume_parser import extract_text_from_resume
+from .services.skill_analyzer import extract_resume_skills
 
 
 @login_required
@@ -18,17 +19,18 @@ def upload_resume_view(request):
             if extracted:
                 resume.extracted_text = extracted
                 resume.save()
-                messages.success(request, "Resume uploaded and processed successfully.")
+
+                matched_skills = extract_resume_skills(extracted)
+                if matched_skills:
+                    resume.ai_extracted_skills.set(matched_skills)
+                    messages.success(
+                        request,
+                        f"Resume processed. Detected: {', '.join(s.name for s in matched_skills)}."
+                    )
+                else:
+                    messages.success(request, "Resume uploaded and processed successfully.")
             else:
                 messages.warning(request, "Resume uploaded, but text extraction failed. You may need to re-upload a clearer file.")
-
-            return redirect('resumes:list')
-        else:
-            messages.error(request, "Please upload a valid PDF or DOCX file.")
-    else:
-        form = ResumeUploadForm()
-    return render(request, 'resumes/upload.html', {'form': form})
-
 
 @login_required
 def resume_list_view(request):

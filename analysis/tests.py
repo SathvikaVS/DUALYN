@@ -55,6 +55,14 @@ class GapEngineTests(TestCase):
         gap = analysis.gaps.get(skill=self.python)
         self.assertEqual(gap.status, 'needs_improvement')
 
+    def test_ai_extracted_skill_counts_as_resume_evidence_even_without_literal_mention(self):
+        resume = Resume.objects.create(student=self.student, extracted_text="Built web apps using a popular scripting language.")
+        resume.ai_extracted_skills.set([self.python])
+        analysis = run_analysis(self.student, self.job)
+        gap = analysis.gaps.get(skill=self.python)
+        self.assertEqual(gap.status, 'needs_improvement')
+        self.assertIn('mentioned in resume', gap.reasoning)
+
     def test_missing_fundamental_skill_gets_high_priority(self):
         analysis = run_analysis(self.student, self.job)
         gap = analysis.gaps.get(skill=self.python)

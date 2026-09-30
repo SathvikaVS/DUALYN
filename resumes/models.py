@@ -14,6 +14,7 @@ class Resume(models.Model):
     student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='resumes')
     file = models.FileField(upload_to='resumes/%Y/%m/', validators=[validate_resume_file])
     extracted_text = models.TextField(blank=True)
+    ai_extracted_skills = models.ManyToManyField('skills.Skill', blank=True, related_name='resumes_mentioning')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

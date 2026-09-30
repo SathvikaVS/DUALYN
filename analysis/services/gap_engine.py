@@ -17,6 +17,10 @@ def run_analysis(student, job_role):
     latest_resume = student.resumes.order_by('-uploaded_at').first()
     resume_text = (latest_resume.extracted_text or '').lower() if latest_resume else ''
 
+    ai_resume_skill_ids = (
+        set(latest_resume.ai_extracted_skills.values_list('id', flat=True)) if latest_resume else set()
+    )
+
     analysis = SkillAnalysis.objects.create(student=student, job_role=job_role)
 
     weighted_sum = 0
@@ -24,7 +28,7 @@ def run_analysis(student, job_role):
 
     for job_skill in job_skills:
         skill = job_skill.skill
-        evidence = _gather_evidence(skill, declared, project_skill_ids, resume_text)
+        evidence = _gather_evidence(skill, declared, project_skill_ids, resume_text, ai_resume_skill_ids)
         status, score = _determine_status(evidence)
         priority = _determine_priority(job_skill.importance_weight, job_skill.is_fundamental, status)
         reasoning = _build_reasoning(skill, evidence, job_skill)
@@ -45,14 +49,17 @@ def run_analysis(student, job_role):
     return analysis
 
 
-def _gather_evidence(skill, declared, project_skill_ids, resume_text):
+def _gather_evidence(skill, declared, project_skill_ids, resume_text, ai_resume_skill_ids=None):
+    ai_resume_skill_ids = ai_resume_skill_ids or set()
     evidence = []
     declared_entry = declared.get(skill.id)
     if declared_entry:
         evidence.append(('declared', declared_entry.level))
     if skill.id in project_skill_ids:
         evidence.append(('project', None))
-    if resume_text and skill.normalized_name in resume_text:
+    # Either a literal substring match or an AI-validated match counts as
+    # resume evidence, but only once per skill - having both doesn't count twice.
+    if (resume_text and skill.normalized_name in resume_text) or skill.id in ai_resume_skill_ids:
         evidence.append(('resume', None))
     return evidence
 
