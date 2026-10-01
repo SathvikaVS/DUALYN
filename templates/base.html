@@ -37,9 +37,12 @@
             </ul>
             <ul class="navbar-nav">
                 <li class="nav-item"><span class="nav-link text-light">{{ user.username }}</span></li>
-                {% if accounts_urls_available %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a></li>
-                {% endif %}
+                <li class="nav-item">
+                    <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link nav-link p-0 border-0">Logout</button>
+                    </form>
+                </li>
             </ul>
             {% endif %}
         </div>
