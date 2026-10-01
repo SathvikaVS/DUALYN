@@ -1,24 +1,24 @@
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from recommendations.models import RoadmapItem
 
 
-@login_required
 def dashboard_view(request):
-    user = request.user
+    """
+    Root URL. Anonymous visitors see the public landing page (Section 4's
+    flow puts "Landing Page" before Register/Login). Logged-in students
+    see their dashboard. Kept as one view, under the existing url name
+    'dashboard', so every template's {% url 'dashboard' %} link keeps
+    working for both cases.
+    """
+    if not request.user.is_authenticated:
+        return render(request, 'landing.html')
 
+    user = request.user
     profile = getattr(user, 'student_profile', None)
     display_name = profile.Full_name if profile else user.username
-
     analyses = user.analyses.select_related('job_role')
     latest = analyses.first()
-
-    context = {
-        'display_name': display_name,
-        'latest': latest,
-        'recent': analyses[:5],
-    }
-
+    context = {'display_name': display_name, 'latest': latest, 'recent': analyses[:5]}
     if latest:
         gaps = latest.gaps.select_related('skill')
         context.update({
@@ -30,5 +30,4 @@ def dashboard_view(request):
                 roadmap__analysis=latest, phase__in=[1, 2]
             ).select_related('skill_gap__skill')[:3],
         })
-
     return render(request, 'dashboard.html', context)

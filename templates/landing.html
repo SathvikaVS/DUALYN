@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}DUALYN - Know your skill gap{% endblock %}
+{% block content %}
+
+<section class="hero">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <h1 class="mb-3">See exactly where your skills stand, and what to learn next.</h1>
+            <p class="lede mb-4">Dualyn compares your real skills, resume, and projects against the job you're aiming for, then tells you precisely which gaps to close first.</p>
+            <div class="d-flex gap-2">
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">Create your free account</a>
+                <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary btn-lg">I already have an account</a>
+            </div>
+        </div>
+        <div class="col-lg-5 gauge-wrap mt-5 mt-lg-0">
+            <svg width="220" height="220" viewBox="0 0 220 220">
+                <circle cx="110" cy="110" r="92" fill="none" stroke="#DED1DF" stroke-width="14"/>
+                <circle cx="110" cy="110" r="92" fill="none" stroke="#59345F" stroke-width="14"
+                        stroke-linecap="round" stroke-dasharray="578" stroke-dashoffset="162"
+                        transform="rotate(-90 110 110)"/>
+                <text x="110" y="104" text-anchor="middle" class="gauge-score">72%</text>
+                <text x="110" y="128" text-anchor="middle" class="gauge-label">readiness</text>
+            </svg>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100"><div class="card-body">
+                <h5 class="card-title">Skill Gap Analysis</h5>
+                <p class="text-muted mb-0">Your declared skills, resume, and projects are checked against what your target role actually requires.</p>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100"><div class="card-body">
+                <h5 class="card-title">Readiness Score</h5>
+                <p class="text-muted mb-0">A weighted score that reflects how important each missing skill is to the role, not just how many you have.</p>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100"><div class="card-body">
+                <h5 class="card-title">Learning Roadmap</h5>
+                <p class="text-muted mb-0">Your gaps are sequenced into phases, fundamentals first, so you always know what to study next.</p>
+            </div></div>
+        </div>
+    </div>
+</section>
+
+<section class="section-muted py-5">
+    <div class="container">
+        <h2 class="mb-4">How it works</h2>
+        <div class="row g-4">
+            <div class="col-md-3 d-flex gap-3">
+                <span class="step-number">1</span>
+                <p class="mb-0">Add your current skills, upload your resume, and list your projects.</p>
+            </div>
+            <div class="col-md-3 d-flex gap-3">
+                <span class="step-number">2</span>
+                <p class="mb-0">Pick the job you're targeting from our list of roles.</p>
+            </div>
+            <div class="col-md-3 d-flex gap-3">
+                <span class="step-number">3</span>
+                <p class="mb-0">Get a readiness score and a skill-by-skill gap report.</p>
+            </div>
+            <div class="col-md-3 d-flex gap-3">
+                <span class="step-number">4</span>
+                <p class="mb-0">Follow your personalized roadmap, and track progress over time.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 text-center">
+    <h2 class="mb-3">Ready to see your gap?</h2>
+    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">Create your free account</a>
+</section>
+{% endblock %}
