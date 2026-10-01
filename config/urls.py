@@ -22,12 +22,12 @@ from core.views import dashboard_view
 
 
 urlpatterns = [
+    path('', dashboard_view, name='dashboard'),
     path('admin/', admin.site.urls),
     path('students/', include('students.urls')),
     path('resumes/', include('resumes.urls')),
     path('skills/', include('skills.urls')),
     path('analysis/', include('analysis.urls')),
-    path('', dashboard_view, name='dashboard'),
 ]
 
 if settings.DEBUG:

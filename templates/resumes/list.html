@@ -1,15 +1,28 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>My Resumes</h2>
-<a href="{% url 'resumes:upload' %}">Upload New Resume</a>
-<ul>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My Resumes</h2>
+    <a href="{% url 'resumes:upload' %}" class="btn btn-primary btn-sm">Upload New Resume</a>
+</div>
+<div class="row">
 {% for resume in resumes %}
-    <li>
-        {{ resume.file.name }} — uploaded {{ resume.uploaded_at|date:"M d, Y" }}
-        <details><summary>View extracted text</summary><pre>{{ resume.extracted_text|truncatechars:500 }}</pre></details>
-    </li>
+    <div class="col-md-6 mb-3">
+        <div class="card"><div class="card-body">
+            <h6 class="card-title">{{ resume.file.name }}</h6>
+            <p class="text-muted small mb-2">Uploaded {{ resume.uploaded_at|date:"M d, Y" }}</p>
+            {% if resume.ai_extracted_skills.all %}
+            <p class="mb-2">
+                {% for s in resume.ai_extracted_skills.all %}<span class="badge bg-info text-dark">{{ s.name }}</span>{% endfor %}
+            </p>
+            {% endif %}
+            <details>
+                <summary class="small text-primary" style="cursor:pointer;">View extracted text</summary>
+                <pre class="small mt-2" style="white-space: pre-wrap;">{{ resume.extracted_text|truncatechars:500 }}</pre>
+            </details>
+        </div></div>
+    </div>
 {% empty %}
-    <li>No resumes uploaded yet.</li>
+    <div class="col"><p class="text-muted">No resumes uploaded yet.</p></div>
 {% endfor %}
-</ul>
+</div>
 {% endblock %}

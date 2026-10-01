@@ -1,46 +1,48 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Compare Analyses</h2>
-
-<form method="get">
-    <label>Earlier:
-        <select name="old">
-            {% for a in analyses %}
-                <option value="{{ a.pk }}">{{ a.job_role.title }} - {{ a.readiness_score }}% - {{ a.created_at|date:"M d, Y H:i" }}</option>
-            {% endfor %}
+<h2 class="mb-3">Compare Analyses</h2>
+<div class="card mb-4"><div class="card-body">
+<form method="get" class="row g-2 align-items-end">
+    <div class="col-md-5">
+        <label class="form-label">Earlier</label>
+        <select name="old" class="form-select">
+            {% for a in analyses %}<option value="{{ a.pk }}">{{ a.job_role.title }} - {{ a.readiness_score }}% - {{ a.created_at|date:"M d, Y H:i" }}</option>{% endfor %}
         </select>
-    </label>
-    <label>Later:
-        <select name="new">
-            {% for a in analyses %}
-                <option value="{{ a.pk }}">{{ a.job_role.title }} - {{ a.readiness_score }}% - {{ a.created_at|date:"M d, Y H:i" }}</option>
-            {% endfor %}
+    </div>
+    <div class="col-md-5">
+        <label class="form-label">Later</label>
+        <select name="new" class="form-select">
+            {% for a in analyses %}<option value="{{ a.pk }}">{{ a.job_role.title }} - {{ a.readiness_score }}% - {{ a.created_at|date:"M d, Y H:i" }}</option>{% endfor %}
         </select>
-    </label>
-    <button type="submit">Compare</button>
+    </div>
+    <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Compare</button></div>
 </form>
+</div></div>
 
-{% if error %}<p>{{ error }}</p>{% endif %}
+{% if error %}<div class="alert alert-warning">{{ error }}</div>{% endif %}
 
 {% if result %}
-    {% if different_roles %}
-        <p><em>These analyses are for different job roles, so only skills required by both are directly comparable.</em></p>
-    {% endif %}
-
-    <h3>Readiness: {{ old.readiness_score }}% to {{ new.readiness_score }}%
-        ({% if result.score_change > 0 %}+{% endif %}{{ result.score_change }} points)</h3>
-    <p>{{ result.improved_count }} improved, {{ result.declined_count }} declined.</p>
-
-    <table border="1" cellpadding="6">
-        <tr><th>Skill</th><th>Before</th><th>After</th><th>Change</th></tr>
-        {% for c in result.changes %}
-        <tr>
-            <td>{{ c.skill.name }}</td>
-            <td>{{ c.old_status|default:"-" }}</td>
-            <td>{{ c.new_status|default:"-" }}</td>
-            <td>{{ c.change|title }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+{% if different_roles %}<div class="alert alert-secondary small">These analyses are for different job roles, so only skills required by both are directly comparable.</div>{% endif %}
+<div class="card mb-3"><div class="card-body">
+    <h5>Readiness: {{ old.readiness_score }}% &rarr; {{ new.readiness_score }}%
+        <span class="badge {% if result.score_change >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+            {% if result.score_change > 0 %}+{% endif %}{{ result.score_change }}
+        </span>
+    </h5>
+    <p class="text-muted mb-0">{{ result.improved_count }} improved, {{ result.declined_count }} declined.</p>
+</div></div>
+<table class="table table-bordered bg-white">
+    <thead><tr><th>Skill</th><th>Before</th><th>After</th><th>Change</th></tr></thead>
+    <tbody>
+    {% for c in result.changes %}
+    <tr>
+        <td>{{ c.skill.name }}</td>
+        <td>{{ c.old_status|default:"-" }}</td>
+        <td>{{ c.new_status|default:"-" }}</td>
+        <td>{{ c.change|title }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
 {% endif %}
 {% endblock %}

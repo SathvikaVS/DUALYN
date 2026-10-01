@@ -1,9 +1,18 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Run Skill Gap Analysis</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Analyze</button>
-</form>
+<div class="row justify-content-center">
+<div class="col-md-6">
+<div class="card"><div class="card-body">
+    <h4 class="card-title mb-3">Run Skill Gap Analysis</h4>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">{{ form.job_role.label }}</label>
+            {{ form.job_role }}
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Analyze</button>
+    </form>
+</div></div>
+</div>
+</div>
 {% endblock %}

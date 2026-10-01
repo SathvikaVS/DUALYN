@@ -1,56 +1,93 @@
 {% extends 'base.html' %}
+{% block title %}Dashboard - DUALYN{% endblock %}
 {% block content %}
-<h2>Welcome, {{ display_name }}</h2>
+<h2 class="mb-4">Welcome, {{ display_name }}</h2>
 
 {% if latest %}
-    <h3>Latest Analysis: {{ latest.job_role.title }}</h3>
-    <p>Readiness: <strong>{{ latest.readiness_score }}%</strong></p>
-    <progress value="{{ latest.readiness_score }}" max="100"></progress>
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="card-title mb-0">Latest Analysis: {{ latest.job_role.title }}</h5>
+            <span class="fs-4 fw-bold">{{ latest.readiness_score }}%</span>
+        </div>
+        <div class="progress mb-3" style="height: 10px;">
+            <div class="progress-bar bg-success" style="width: {{ latest.readiness_score }}%"></div>
+        </div>
+        <div class="row text-center">
+            <div class="col"><span class="badge badge-status-covered">Covered</span><div class="fs-5 mt-1">{{ covered_count }}</div></div>
+            <div class="col"><span class="badge badge-status-needs_improvement">Improve</span><div class="fs-5 mt-1">{{ improve_count }}</div></div>
+            <div class="col"><span class="badge badge-status-missing">Missing</span><div class="fs-5 mt-1">{{ missing_count }}</div></div>
+        </div>
+        <a href="{% url 'analysis:report' latest.pk %}" class="btn btn-primary btn-sm mt-3">View Full Report</a>
+    </div>
+</div>
 
-    <ul>
-        <li>Covered: {{ covered_count }}</li>
-        <li>Needs improvement: {{ improve_count }}</li>
-        <li>Missing: {{ missing_count }}</li>
-    </ul>
-
-    <h3>High-Priority Gaps</h3>
-    <ul>
-    {% for gap in high_priority %}
-        <li>{{ gap.skill.name }} ({{ gap.get_status_display }})</li>
-    {% empty %}
-        <li>No high-priority gaps. Nice work.</li>
-    {% endfor %}
-    </ul>
-
-    <h3>Recommended Next Skills</h3>
-    <ol>
-    {% for item in next_skills %}
-        <li>{{ item.skill_gap.skill.name }}</li>
-    {% empty %}
-        <li>Nothing pending.</li>
-    {% endfor %}
-    </ol>
-
-    <p><a href="{% url 'analysis:report' latest.pk %}">View full report</a></p>
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">High-Priority Gaps</h5>
+                <ul class="list-group list-group-flush">
+                {% for gap in high_priority %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ gap.skill.name }}
+                        <span class="badge badge-status-{{ gap.status }}">{{ gap.get_status_display }}</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">No high-priority gaps. Nice work.</li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Recommended Next Skills</h5>
+                <ol class="list-group list-group-numbered list-group-flush">
+                {% for item in next_skills %}
+                    <li class="list-group-item">{{ item.skill_gap.skill.name }}</li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Nothing pending.</li>
+                {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
 {% else %}
-    <p>You haven't run an analysis yet.</p>
+<div class="card mb-4"><div class="card-body text-center py-5">
+    <p class="mb-3">You haven't run an analysis yet.</p>
+    <a href="{% url 'analysis:run' %}" class="btn btn-primary">Run Your First Analysis</a>
+</div></div>
 {% endif %}
 
-<h3>Quick Links</h3>
-<ul>
-    <li><a href="{% url 'analysis:run' %}">Run new analysis</a></li>
-    <li><a href="{% url 'skills:my_skills' %}">My skills</a></li>
-    <li><a href="{% url 'resumes:upload' %}">Upload resume</a></li>
-    <li><a href="{% url 'students:profile' %}">My profile</a></li>
-    <li><a href="{% url 'analysis:history' %}">Analysis history</a></li>
-</ul>
-
-<h3>Recent Analyses</h3>
-<ul>
-{% for a in recent %}
-    <li><a href="{% url 'analysis:report' a.pk %}">{{ a.job_role.title }}: {{ a.readiness_score }}% ({{ a.created_at|date:"M d, Y" }})</a></li>
-{% empty %}
-    <li>None yet.</li>
-{% endfor %}
-</ul>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100"><div class="card-body">
+            <h6 class="card-title">Quick Links</h6>
+            <div class="d-grid gap-2">
+                <a href="{% url 'analysis:run' %}" class="btn btn-outline-primary btn-sm">Run New Analysis</a>
+                <a href="{% url 'skills:my_skills' %}" class="btn btn-outline-secondary btn-sm">My Skills</a>
+                <a href="{% url 'resumes:upload' %}" class="btn btn-outline-secondary btn-sm">Upload Resume</a>
+                <a href="{% url 'students:profile' %}" class="btn btn-outline-secondary btn-sm">My Profile</a>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-md-8 mb-3">
+        <div class="card h-100"><div class="card-body">
+            <h6 class="card-title">Recent Analyses</h6>
+            <ul class="list-group list-group-flush">
+            {% for a in recent %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <a href="{% url 'analysis:report' a.pk %}">{{ a.job_role.title }}</a>
+                    <span>{{ a.readiness_score }}% &middot; {{ a.created_at|date:"M d, Y" }}</span>
+                </li>
+            {% empty %}
+                <li class="list-group-item text-muted">None yet.</li>
+            {% endfor %}
+            </ul>
+        </div></div>
+    </div>
+</div>
 {% endblock %}

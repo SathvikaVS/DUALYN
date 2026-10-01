@@ -1,18 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>My Skills</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add Skill</button>
-</form>
-<ul>
-{% for entry in declared %}
-    <li>{{ entry.skill.name }} — {{ entry.get_level_display }}
-        <a href="{% url 'skills:remove_skill' entry.pk %}">Remove</a>
-    </li>
-{% empty %}
-    <li>No skills added yet.</li>
-{% endfor %}
-</ul>
+<h2 class="mb-3">My Skills</h2>
+<div class="row">
+<div class="col-md-5">
+    <div class="card"><div class="card-body">
+        <h5 class="card-title">Add a Skill</h5>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3"><label class="form-label">{{ form.skill.label }}</label>{{ form.skill }}</div>
+            <div class="mb-3"><label class="form-label">{{ form.level.label }}</label>{{ form.level }}</div>
+            <button type="submit" class="btn btn-primary w-100">Add Skill</button>
+        </form>
+    </div></div>
+</div>
+<div class="col-md-7">
+    <div class="card"><div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+        {% for entry in declared %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>{{ entry.skill.name }} <span class="badge bg-secondary">{{ entry.get_level_display }}</span></span>
+                <a href="{% url 'skills:remove_skill' entry.pk %}" class="btn btn-sm btn-outline-danger">Remove</a>
+            </li>
+        {% empty %}
+            <li class="list-group-item text-muted">No skills added yet.</li>
+        {% endfor %}
+        </ul>
+    </div></div>
+</div>
+</div>
 {% endblock %}

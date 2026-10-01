@@ -1,13 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>My Analysis History</h2>
-<a href="{% url 'analysis:run' %}">Run New Analysis</a>
-<a href="{% url 'analysis:compare' %}">Compare two analyses</a>
-<ul>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>My Analysis History</h2>
+    <div>
+        <a href="{% url 'analysis:run' %}" class="btn btn-primary btn-sm">Run New Analysis</a>
+        <a href="{% url 'analysis:compare' %}" class="btn btn-outline-secondary btn-sm">Compare Two</a>
+    </div>
+</div>
+<div class="card"><div class="card-body p-0">
+<ul class="list-group list-group-flush">
 {% for a in analyses %}
-    <li><a href="{% url 'analysis:report' a.pk %}">{{ a.job_role.title }} — {{ a.readiness_score }}% — {{ a.created_at|date:"M d, Y" }}</a></li>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <a href="{% url 'analysis:report' a.pk %}">{{ a.job_role.title }}</a>
+        <span>{{ a.readiness_score }}% &middot; {{ a.created_at|date:"M d, Y" }}</span>
+    </li>
 {% empty %}
-    <li>No analyses yet.</li>
+    <li class="list-group-item text-muted">No analyses yet.</li>
 {% endfor %}
 </ul>
+</div></div>
 {% endblock %}
