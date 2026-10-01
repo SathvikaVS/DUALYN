@@ -10,9 +10,9 @@ class StudentProfileForm(forms.ModelForm):
             'Status', 'Year_of_Study', 'Years_of_Experience',
         ]
 
-def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-    for name, field in self.fields.items():
-        existing = field.widget.attrs.get('class', '')
-        css_class = 'form-select' if isinstance(field.widget, forms.Select) else 'form-control'
-        field.widget.attrs['class'] = (existing + ' ' + css_class).strip()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            existing = field.widget.attrs.get('class', '')
+            css_class = 'form-select' if isinstance(field.widget, forms.Select) else 'form-control'
+            field.widget.attrs['class'] = (existing + ' ' + css_class).strip()

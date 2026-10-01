@@ -31,6 +31,11 @@ def upload_resume_view(request):
                     messages.success(request, "Resume uploaded and processed successfully.")
             else:
                 messages.warning(request, "Resume uploaded, but text extraction failed. You may need to re-upload a clearer file.")
+            return redirect('resumes:list')
+    else:
+        form = ResumeUploadForm()
+    return render(request, 'resumes/upload.html', {'form': form})
+
 
 @login_required
 def resume_list_view(request):

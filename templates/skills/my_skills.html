@@ -1,31 +1,108 @@
 {% extends 'base.html' %}
+
+{% block title %}My Skills — DUALYN{% endblock %}
+
 {% block content %}
-<h2 class="mb-3">My Skills</h2>
-<div class="row">
-<div class="col-md-5">
-    <div class="card"><div class="card-body">
-        <h5 class="card-title">Add a Skill</h5>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3"><label class="form-label">{{ form.skill.label }}</label>{{ form.skill }}</div>
-            <div class="mb-3"><label class="form-label">{{ form.level.label }}</label>{{ form.level }}</div>
-            <button type="submit" class="btn btn-primary w-100">Add Skill</button>
-        </form>
-    </div></div>
+<div class="mb-4">
+    <span class="section-label">
+        <i class="bi bi-patch-check-fill"></i> Competency Catalog
+    </span>
+    <h1 class="h2 mb-1">My Skills Library</h1>
+    <p class="text-ink-muted mb-0">Declare your technical proficiencies and mastery levels to calibrate your career readiness calculations.</p>
 </div>
-<div class="col-md-7">
-    <div class="card"><div class="card-body p-0">
-        <ul class="list-group list-group-flush">
-        {% for entry in declared %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>{{ entry.skill.name }} <span class="badge bg-secondary">{{ entry.get_level_display }}</span></span>
-                <a href="{% url 'skills:remove_skill' entry.pk %}" class="btn btn-sm btn-outline-danger">Remove</a>
-            </li>
-        {% empty %}
-            <li class="list-group-item text-muted">No skills added yet.</li>
-        {% endfor %}
-        </ul>
-    </div></div>
-</div>
+
+<div class="row g-4">
+    <!-- Left Column: Add Skill Card -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-1">
+            <div class="card-header-clean bg-white">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="brand-icon-box" style="width:28px; height:28px; font-size:0.85rem;">
+                        <i class="bi bi-plus-lg"></i>
+                    </span>
+                    <h5 class="mb-0 fw-bold">Declare a Skill</h5>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.skill.id_for_label }}" class="form-label">
+                            Competency / Technology
+                        </label>
+                        {{ form.skill }}
+                        <div class="form-text">Choose from our verified technology catalog.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.level.id_for_label }}" class="form-label">
+                            Proficiency Level
+                        </label>
+                        {{ form.level }}
+                        <div class="form-text">Self-assess your practical command.</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="bi bi-plus-circle me-1"></i> Add to My Skills
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="p-3 mt-3 rounded-3" style="background: rgba(49, 85, 217, 0.05); border: 1px solid rgba(49, 85, 217, 0.15);">
+            <div class="d-flex align-items-start gap-2 small text-ink-secondary">
+                <i class="bi bi-info-circle-fill text-cobalt mt-1"></i>
+                <span>Skills declared here are combined with skills parsed from your uploaded resumes when generating diagnostic benchmarks.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Declared Skills List -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-1">
+            <div class="card-header-clean bg-white">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="brand-icon-box" style="width:28px; height:28px; font-size:0.85rem;">
+                        <i class="bi bi-check-all"></i>
+                    </span>
+                    <h5 class="mb-0 fw-bold">Declared Competencies</h5>
+                </div>
+                <span class="badge bg-secondary-subtle text-secondary">{{ declared|length }} Declared</span>
+            </div>
+
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for entry in declared %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge-level p-2 rounded-circle d-flex align-items-center justify-content-center" style="width:32px; height:32px;">
+                                <i class="bi bi-code-square"></i>
+                            </span>
+                            <div>
+                                <span class="fw-bold text-ink d-block">{{ entry.skill.name }}</span>
+                                <span class="text-ink-muted small">Added {{ entry.added_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge badge-level">
+                                {{ entry.get_level_display }}
+                            </span>
+                            <a href="{% url 'skills:remove_skill' entry.pk %}" class="btn btn-outline-danger btn-sm p-1 px-2" title="Remove skill">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item text-center py-5 text-ink-muted">
+                        <i class="bi bi-patch-question fs-1 text-ink-light d-block mb-2"></i>
+                        <p class="mb-0 fw-medium">No skills declared yet.</p>
+                        <span class="small">Use the form on the left to add your competencies.</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -1,79 +1,231 @@
 {% extends 'base.html' %}
-{% block title %}DUALYN - Know your skill gap{% endblock %}
-{% block content %}
 
-<section class="hero">
-    <div class="row align-items-center">
-        <div class="col-lg-7">
-            <h1 class="mb-3">See exactly where your skills stand, and what to learn next.</h1>
-            <p class="lede mb-4">Dualyn compares your real skills, resume, and projects against the job you're aiming for, then tells you precisely which gaps to close first.</p>
-            <div class="d-flex gap-2">
-                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">Create your free account</a>
-                <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary btn-lg">I already have an account</a>
-            </div>
-        </div>
-        <div class="col-lg-5 gauge-wrap mt-5 mt-lg-0">
-            <svg width="220" height="220" viewBox="0 0 220 220">
-                <circle cx="110" cy="110" r="92" fill="none" stroke="#E9ECFB" stroke-width="14"/>
-                <circle cx="110" cy="110" r="92" fill="none" stroke="#3155D9" stroke-width="14"
-                        stroke-linecap="round" stroke-dasharray="578" stroke-dashoffset="162"
-                        transform="rotate(-90 110 110)"/>
-                <text x="110" y="104" text-anchor="middle" class="gauge-score">72%</text>
-                <text x="110" y="128" text-anchor="middle" class="gauge-label">readiness</text>
-            </svg>
-        </div>
-    </div>
-</section>
+{% block title %}DUALYN — Career Intelligence &amp; Skill Gap Analyzer{% endblock %}
 
-<section class="py-5">
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card h-100"><div class="card-body">
-                <h5 class="card-title">Skill Gap Analysis</h5>
-                <p class="text-muted mb-0">Your declared skills, resume, and projects are checked against what your target role actually requires.</p>
-            </div></div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100"><div class="card-body">
-                <h5 class="card-title">Readiness Score</h5>
-                <p class="text-muted mb-0">A weighted score that reflects how important each missing skill is to the role, not just how many you have.</p>
-            </div></div>
-        </div>
-        <div class="col-md-4">
-            <div class="card h-100"><div class="card-body">
-                <h5 class="card-title">Learning Roadmap</h5>
-                <p class="text-muted mb-0">Your gaps are sequenced into phases, fundamentals first, so you always know what to study next.</p>
-            </div></div>
-        </div>
-    </div>
-</section>
-
-<section class="section-muted py-5">
+{% block main_wrapper %}
+<!-- ================= HERO SECTION ================= -->
+<section class="landing-hero">
     <div class="container">
-        <h2 class="mb-4">How it works</h2>
-        <div class="row g-4">
-            <div class="col-md-3 d-flex gap-3">
-                <span class="step-number">1</span>
-                <p class="mb-0">Add your current skills, upload your resume, and list your projects.</p>
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <div class="hero-chip">
+                    <span class="hero-chip-dot"></span>
+                    <span>AI-Powered Career Intelligence Platform</span>
+                </div>
+
+                <h1>
+                    Know your skills.
+                    <span class="gradient-text">Close your gap.</span>
+                    Build your future.
+                </h1>
+
+                <p class="hero-subtext">
+                    DUALYN benchmarks your current competencies, resume, and projects directly against the requirements of your target tech role, delivering actionable readiness scores and structured roadmaps.
+                </p>
+
+                <div class="hero-cta-group">
+                    <a href="{% url 'accounts:register' %}" class="btn hero-btn-primary">
+                        Start Your Career Analysis <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                    <a href="{% url 'accounts:login' %}" class="hero-btn-secondary">
+                        Existing user? <span class="text-white fw-semibold">Sign in</span> <i class="bi bi-chevron-right small"></i>
+                    </a>
+                </div>
+
+                <div class="hero-stats-strip">
+                    <div class="hero-stat-item">
+                        <strong>Weighted Scoring</strong>
+                        <span>Algorithm Driven</span>
+                    </div>
+                    <div class="hero-divider-dot"></div>
+                    <div class="hero-stat-item">
+                        <strong>Instant Gap Audit</strong>
+                        <span>Resume &amp; Skill Match</span>
+                    </div>
+                    <div class="hero-divider-dot"></div>
+                    <div class="hero-stat-item">
+                        <strong>4-Phase Roadmaps</strong>
+                        <span>Actionable Milestones</span>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-3 d-flex gap-3">
-                <span class="step-number">2</span>
-                <p class="mb-0">Pick the job you're targeting from our list of roles.</p>
-            </div>
-            <div class="col-md-3 d-flex gap-3">
-                <span class="step-number">3</span>
-                <p class="mb-0">Get a readiness score and a skill-by-skill gap report.</p>
-            </div>
-            <div class="col-md-3 d-flex gap-3">
-                <span class="step-number">4</span>
-                <p class="mb-0">Follow your personalized roadmap, and track progress over time.</p>
+
+            <!-- HERO INTERACTIVE PREVIEW CARD -->
+            <div class="col-lg-5">
+                <div class="hero-preview-card">
+                    <div class="preview-card-header">
+                        <div>
+                            <span class="preview-tag">Target Benchmark</span>
+                            <h3 class="preview-role-title">Data Analyst</h3>
+                        </div>
+                        <span class="preview-status-pill">
+                            <i class="bi bi-check2-circle me-1"></i> Analysis Ready
+                        </span>
+                    </div>
+
+                    <div class="hero-dial-wrap">
+                        <div class="hero-dial">
+                            <svg viewBox="0 0 180 180">
+                                <circle cx="90" cy="90" r="72" class="hero-dial-bg" />
+                                <circle cx="90" cy="90" r="72" class="hero-dial-bar" />
+                            </svg>
+                            <div class="hero-dial-content">
+                                <span class="hero-dial-score">78%</span>
+                                <span class="hero-dial-label">Readiness</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="preview-metrics-grid">
+                        <div>
+                            <span class="preview-metric-num text-cobalt-light">12</span>
+                            <span class="preview-metric-lbl">Covered</span>
+                        </div>
+                        <div style="border-left: 1px solid rgba(255,255,255,0.08); border-right: 1px solid rgba(255,255,255,0.08);">
+                            <span class="preview-metric-num" style="color: #FCD34D;">5</span>
+                            <span class="preview-metric-lbl">Improve</span>
+                        </div>
+                        <div>
+                            <span class="preview-metric-num text-danger">3</span>
+                            <span class="preview-metric-lbl">Missing</span>
+                        </div>
+                    </div>
+
+                    <div class="preview-next-item">
+                        <div class="preview-next-icon">
+                            <i class="bi bi-bullseye"></i>
+                        </div>
+                        <div>
+                            <p class="preview-next-title">Recommended Immediate Focus</p>
+                            <p class="preview-next-desc">Advanced SQL &amp; Power BI Dashboarding</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="py-5 text-center">
-    <h2 class="mb-3">Ready to see your gap?</h2>
-    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">Create your free account</a>
+<!-- ================= FEATURES / WHAT DUALYN DOES ================= -->
+<section class="landing-section">
+    <div class="container">
+        <div class="landing-section-heading">
+            <span class="section-label">
+                <i class="bi bi-layers-fill"></i> Core Capabilities
+            </span>
+            <h2 class="mt-2">Turn career ambiguity into data-driven direction.</h2>
+            <p class="text-ink-muted">
+                Stop guessing what hiring managers and tech recruiters look for. DUALYN analyzes your exact profile against industry benchmarks.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-box-icon">
+                        <i class="bi bi-diagram-3-fill"></i>
+                    </div>
+                    <div class="feature-step-num">01 / DIAGNOSIS</div>
+                    <h3>Skill Gap Analysis</h3>
+                    <p>
+                        Dual-source benchmarking: compares declared skills and resume text extractions against role requirements to spot hidden gaps.
+                    </p>
+                    <a href="{% url 'accounts:register' %}" class="feature-box-link">
+                        Explore Gap Engine <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-box-icon">
+                        <i class="bi bi-speedometer2"></i>
+                    </div>
+                    <div class="feature-step-num">02 / QUANTIFIED</div>
+                    <h3>Weighted Readiness Score</h3>
+                    <p>
+                        Skills are weighted by criticality (from Nice-to-Have to Critical), giving you a realistic, objective readiness percentage.
+                    </p>
+                    <a href="{% url 'accounts:register' %}" class="feature-box-link">
+                        Calculate Your Score <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="feature-box">
+                    <div class="feature-box-icon">
+                        <i class="bi bi-signpost-split-fill"></i>
+                    </div>
+                    <div class="feature-step-num">03 / EXECUTION</div>
+                    <h3>Phased Learning Roadmap</h3>
+                    <p>
+                        Converts missing competencies into structured 4-phase learning milestones with step-by-step learning actions.
+                    </p>
+                    <a href="{% url 'accounts:register' %}" class="feature-box-link">
+                        View Sample Roadmap <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="landing-section process-section-wrap">
+    <div class="container">
+        <div class="landing-section-heading text-center">
+            <span class="section-label">
+                <i class="bi bi-arrow-repeat"></i> Streamlined Workflow
+            </span>
+            <h2 class="mt-2">From profile evaluation to career momentum.</h2>
+            <p class="text-ink-muted">A clear, repeatable framework to navigate your career advancement.</p>
+        </div>
+
+        <div class="pipeline-grid">
+            <div class="pipeline-card">
+                <div class="pipeline-number">01</div>
+                <h4>Build Your Profile</h4>
+                <p>Upload your resume and declare your technical proficiencies in our skill catalog.</p>
+            </div>
+            <div class="pipeline-card">
+                <div class="pipeline-number">02</div>
+                <h4>Target Your Role</h4>
+                <p>Select your desired career path—from Software Engineer to Data Analyst.</p>
+            </div>
+            <div class="pipeline-card">
+                <div class="pipeline-number">03</div>
+                <h4>Generate Report</h4>
+                <p>Review covered competencies, urgent gaps, and comparative progress trajectories.</p>
+            </div>
+            <div class="pipeline-card">
+                <div class="pipeline-number">04</div>
+                <h4>Follow Roadmap</h4>
+                <p>Complete phase milestones, update your credentials, and watch your readiness climb.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= CTA BANNER ================= -->
+<section class="landing-section">
+    <div class="container">
+        <div class="landing-cta-banner">
+            <div class="cta-banner-content">
+                <span class="section-label dark-label">
+                    <i class="bi bi-rocket-takeoff-fill"></i> Get Started Today
+                </span>
+                <h2 class="mt-1">Ready to close your skill gap?</h2>
+                <p>
+                    Join students and early career professionals using DUALYN to steer their technical development with confidence.
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg shadow-lg text-nowrap">
+                    Create Free Account <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock %}

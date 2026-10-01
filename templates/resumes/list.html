@@ -1,28 +1,98 @@
 {% extends 'base.html' %}
+
+{% block title %}Resume Library — DUALYN{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>My Resumes</h2>
-    <a href="{% url 'resumes:upload' %}" class="btn btn-primary btn-sm">Upload New Resume</a>
-</div>
-<div class="row">
-{% for resume in resumes %}
-    <div class="col-md-6 mb-3">
-        <div class="card"><div class="card-body">
-            <h6 class="card-title">{{ resume.file.name }}</h6>
-            <p class="text-muted small mb-2">Uploaded {{ resume.uploaded_at|date:"M d, Y" }}</p>
-            {% if resume.ai_extracted_skills.all %}
-            <p class="mb-2">
-                {% for s in resume.ai_extracted_skills.all %}<span class="badge bg-info text-dark">{{ s.name }}</span>{% endfor %}
-            </p>
-            {% endif %}
-            <details>
-                <summary class="small text-primary" style="cursor:pointer;">View extracted text</summary>
-                <pre class="small mt-2" style="white-space: pre-wrap;">{{ resume.extracted_text|truncatechars:500 }}</pre>
-            </details>
-        </div></div>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <span class="section-label">
+            <i class="bi bi-file-earmark-person-fill"></i> Document Parsing
+        </span>
+        <h1 class="h2 mb-1">Resume Library</h1>
+        <p class="text-ink-muted mb-0">Upload your CV to automatically extract verified technical keywords and competencies.</p>
     </div>
-{% empty %}
-    <div class="col"><p class="text-muted">No resumes uploaded yet.</p></div>
-{% endfor %}
+    <div>
+        <a href="{% url 'resumes:upload' %}" class="btn btn-primary">
+            <i class="bi bi-cloud-arrow-up-fill"></i> Upload New Resume
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% for resume in resumes %}
+    <div class="col-lg-6">
+        <div class="card h-100 shadow-sm border-1">
+            <div class="card-header-clean bg-white">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="brand-icon-box" style="width:32px; height:32px; font-size:1rem;">
+                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                    </span>
+                    <div style="max-width: 320px;">
+                        <h6 class="mb-0 fw-bold text-ink text-truncate" title="{{ resume.file.name }}">
+                            {{ resume.file.name }}
+                        </h6>
+                        <span class="text-ink-muted small" style="font-size:0.75rem;">
+                            Uploaded {{ resume.uploaded_at|date:"M d, Y \a\t H:i" }}
+                        </span>
+                    </div>
+                </div>
+                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                    <i class="bi bi-check-circle-fill me-1"></i> Parsed
+                </span>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small fw-bold text-ink-muted text-uppercase" style="letter-spacing:0.04em; font-size:0.72rem;">
+                            AI-Extracted Competencies
+                        </span>
+                        <span class="badge bg-secondary-subtle text-secondary small">
+                            {{ resume.ai_extracted_skills.all|length }} detected
+                        </span>
+                    </div>
+
+                    {% if resume.ai_extracted_skills.all %}
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for s in resume.ai_extracted_skills.all %}
+                        <span class="skill-chip">
+                            <i class="bi bi-check2 text-cobalt small"></i> {{ s.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-ink-muted small mb-0 fst-italic">No specific catalog competencies matched in this document.</p>
+                    {% endif %}
+                </div>
+
+                {% if resume.extracted_text %}
+                <details class="clean-accordion">
+                    <summary>View Parsed Text Content</summary>
+                    <div class="mt-2 p-3 rounded bg-light border" style="max-height: 180px; overflow-y: auto;">
+                        <pre class="small text-ink-secondary mb-0" style="white-space: pre-wrap; font-family: monospace; font-size: 0.8rem;">{{ resume.extracted_text|truncatechars:1000 }}</pre>
+                    </div>
+                </details>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="card shadow-sm border-1 text-center py-5 px-4">
+            <div class="brand-icon-box mx-auto mb-3" style="width: 56px; height: 56px; font-size: 1.6rem;">
+                <i class="bi bi-file-earmark-arrow-up"></i>
+            </div>
+            <h4 class="fw-bold mb-2">No resumes uploaded yet</h4>
+            <p class="text-ink-muted mx-auto mb-4" style="max-width: 480px;">
+                Upload your resume (PDF or DOCX) to automatically detect your technical skills and include them in your career readiness scoring.
+            </p>
+            <div>
+                <a href="{% url 'resumes:upload' %}" class="btn btn-primary">
+                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> Upload Your First Resume
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

@@ -1,20 +1,114 @@
 {% extends 'base.html' %}
+
+{% block title %}My Profile — DUALYN{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-<div class="col-md-7">
-<div class="card"><div class="card-body">
-    <h4 class="card-title mb-3">My Profile</h4>
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-        <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            {{ field }}
+<div class="row justify-content-center py-2">
+    <div class="col-lg-8">
+        <div class="mb-4">
+            <span class="section-label">
+                <i class="bi bi-person-gear"></i> Account Settings
+            </span>
+            <h1 class="h2 mb-1">Student Profile</h1>
+            <p class="text-ink-muted mb-0">Update your academic background, career interests, and experience level.</p>
         </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-primary w-100">Save</button>
-    </form>
-</div></div>
-</div>
+
+        <!-- User Identity Header Banner -->
+        <div class="card mb-4 shadow-sm border-1">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="brand-icon-box" style="width: 56px; height: 56px; font-size: 1.5rem; border-radius: 50%;">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <h4 class="fw-bold text-ink mb-1">
+                            {% if profile and profile.Full_name %}{{ profile.Full_name }}{% else %}{{ user.username }}{% endif %}
+                        </h4>
+                        <div class="d-flex flex-wrap align-items-center gap-2 text-ink-muted small">
+                            <span><i class="bi bi-person me-1"></i> @{{ user.username }}</span>
+                            <span>&middot;</span>
+                            <span><i class="bi bi-envelope me-1"></i> {{ user.email|default:"No email set" }}</span>
+                            {% if profile and profile.Carrer_Interest %}
+                            <span>&middot;</span>
+                            <span class="badge bg-primary-subtle text-primary">{{ profile.get_Carrer_Interest_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Form Card -->
+        <div class="card shadow-sm border-1">
+            <div class="card-header-clean bg-white">
+                <h5 class="mb-0 fw-bold">Academic &amp; Career Information</h5>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger py-2 px-3 small mb-3">
+                        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.Full_name.id_for_label }}" class="form-label">Full Name</label>
+                            {{ form.Full_name }}
+                            {% if form.Full_name.errors %}<div class="text-danger small mt-1">{{ form.Full_name.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.College.id_for_label }}" class="form-label">College / University</label>
+                            {{ form.College }}
+                            {% if form.College.errors %}<div class="text-danger small mt-1">{{ form.College.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.Education.id_for_label }}" class="form-label">Education Level</label>
+                            {{ form.Education }}
+                            {% if form.Education.errors %}<div class="text-danger small mt-1">{{ form.Education.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.Carrer_Interest.id_for_label }}" class="form-label">Career Interest</label>
+                            {{ form.Carrer_Interest }}
+                            {% if form.Carrer_Interest.errors %}<div class="text-danger small mt-1">{{ form.Carrer_Interest.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.Status.id_for_label }}" class="form-label">Current Status</label>
+                            {{ form.Status }}
+                            {% if form.Status.errors %}<div class="text-danger small mt-1">{{ form.Status.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.Year_of_Study.id_for_label }}" class="form-label">Year of Study (if student)</label>
+                            {{ form.Year_of_Study }}
+                            {% if form.Year_of_Study.errors %}<div class="text-danger small mt-1">{{ form.Year_of_Study.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="{{ form.Years_of_Experience.id_for_label }}" class="form-label">Years of Experience</label>
+                            {{ form.Years_of_Experience }}
+                            {% if form.Years_of_Experience.errors %}<div class="text-danger small mt-1">{{ form.Years_of_Experience.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-top d-flex justify-content-between align-items-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check2 me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

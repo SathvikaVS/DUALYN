@@ -7,6 +7,6 @@ class ResumeUploadForm(forms.ModelForm):
         model = Resume
         fields = ['file']
 
-def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-    self.fields['file'].widget.attrs.update({'class': 'form-control'})
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['file'].widget.attrs.update({'class': 'form-control'})
