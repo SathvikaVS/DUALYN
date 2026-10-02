@@ -34,7 +34,10 @@
                 <label for="id_password" class="form-label">Password</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-key"></i></span>
-                    <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control border-start-0 ps-0" placeholder="••••••••">
+                    <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control border-start-0 border-end-0 ps-0">
+                    <span class="input-group-text bg-white border-start-0 text-ink-muted toggle-password" style="cursor: pointer;" data-target="id_password">
+                        <i class="bi bi-eye"></i>
+                    </span>
                 </div>
             </div>
 
@@ -49,4 +52,26 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.querySelectorAll('.toggle-password').forEach(function(element) {
+        element.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const targetInput = document.getElementById(targetId);
+            const icon = this.querySelector('i');
+            
+            if (targetInput.type === 'password') {
+                targetInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                targetInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+    });
+</script>
 {% endblock %}
