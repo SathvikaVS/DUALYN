@@ -8,20 +8,20 @@ from .services.progress import compare_analyses
 
 
 @login_required
-def run_analysis_view(request):
-    if request.method == 'POST':
-        form = RunAnalysisForm(request.POST)
-        if form.is_valid():
-            analysis = run_analysis(request.user, form.cleaned_data['job_role'])
-            return redirect('analysis:report', pk=analysis.pk)
-    else:
-        form = RunAnalysisForm()
-    return render(request, 'analysis/run.html', {'form': form})
-
-
-@login_required
 def report_view(request, pk):
     analysis = get_object_or_404(SkillAnalysis, pk=pk, student=request.user)
+    latest_resume = request.user.resumes.order_by('-uploaded_at').first()
+
+    # If the analysis was created before the resume was uploaded, or is stale, recalculate it in-place
+    if latest_resume and (analysis.created_at < latest_resume.uploaded_at or (analysis.readiness_score == 0 and latest_resume.extracted_text)):
+        from .services.gap_engine import recalculate_analysis
+        analysis = recalculate_analysis(analysis)
+
+    # Ensure roadmap exists for this analysis
+    if not hasattr(analysis, 'roadmap') or not analysis.roadmap:
+        generate_recommendations(analysis)
+        analysis.refresh_from_db()
+
     gaps = analysis.gaps.select_related('skill').order_by('status', '-priority')
 
     previous = request.user.analyses.filter(
@@ -36,10 +36,12 @@ def report_view(request, pk):
         'progress': progress,
     })
 
+
 @login_required
 def history_view(request):
     analyses = request.user.analyses.select_related('job_role')
     return render(request, 'analysis/history.html', {'analyses': analyses})
+
 
 @login_required
 def run_analysis_view(request):

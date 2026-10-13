@@ -1,4 +1,11 @@
-STATUS_RANK = {'missing': 0, 'needs_improvement': 1, 'covered': 2}
+STATUS_RANK = {
+    'missing': 0,
+    'not_assessed': 0,
+    'mentioned': 1,
+    'needs_improvement': 1,
+    'covered': 2,
+    'demonstrated': 2,
+}
 CHANGE_ORDER = {'improved': 0, 'declined': 1, 'new': 2, 'removed': 3, 'unchanged': 4}
 
 

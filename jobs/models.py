@@ -29,6 +29,10 @@ class JobSkill(models.Model):
     skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
     importance_weight = models.PositiveSmallIntegerField(choices=IMPORTANCE_CHOICES, default=3)
     is_fundamental = models.BooleanField(default=False)
+    required_level = models.CharField(max_length=50, default='Intermediate', blank=True)
+    role_priority = models.CharField(max_length=10, choices=[('high', 'High'), ('medium', 'Medium'), ('low', 'Low')], default='medium', blank=True)
+    why_it_matters = models.TextField(blank=True)
+    category = models.CharField(max_length=50, blank=True)
 
     class Meta:
         unique_together = ('job_role', 'skill')

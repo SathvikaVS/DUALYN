@@ -8,7 +8,9 @@ catalog is silently dropped, never auto-created.
 import json
 import re
 
+from django.db.models import Q
 from skills.models import Skill
+from skills.services.normalization import extract_skills_with_evidence, canonicalize_skill_name
 from .ai_service import generate_text
 
 
@@ -32,7 +34,7 @@ def parse_ai_response(raw_text):
     """
     Gemini sometimes wraps JSON in ```json fences despite instructions.
     Strip those before parsing, and never let a malformed response crash
-    the caller - return an empty list instead (Section 27).
+    the caller - return an empty list instead.
     """
     cleaned = re.sub(r"```json|```", "", raw_text).strip()
     try:
@@ -47,32 +49,62 @@ def parse_ai_response(raw_text):
 def validate_against_catalog(candidate_names):
     """
     The trust boundary: only names that match a real Skill row
-    (case-insensitively) survive. Everything else is discarded here,
-    not downstream.
+    (case-insensitively or via canonical alias) survive. Everything
+    else is discarded here, never auto-created.
     """
-    normalized_candidates = {name.strip().lower() for name in candidate_names}
-    return list(Skill.objects.filter(normalized_name__in=normalized_candidates))
+    normalized_candidates = set()
+    canonical_candidates = set()
+
+    for name in candidate_names:
+        cleaned = str(name).strip().lower()
+        if cleaned:
+            normalized_candidates.add(cleaned)
+            canon = canonicalize_skill_name(str(name))
+            if canon:
+                canonical_candidates.add(canon.lower())
+                canonical_candidates.add(canon)
+
+    matched_skills = list(Skill.objects.filter(
+        Q(normalized_name__in=normalized_candidates) |
+        Q(normalized_name__in=canonical_candidates) |
+        Q(name__in=canonical_candidates)
+    ).distinct())
+
+    matched_names = {s.name for s in matched_skills}
+    if 'HTML & CSS' in matched_names:
+        matched_skills = [s for s in matched_skills if s.name not in ('HTML', 'CSS')]
+
+    return matched_skills
 
 
 def extract_resume_skills(resume_text):
     """
-    Full pipeline: catalog -> prompt -> Gemini -> parse -> validate.
-    Returns a list of real Skill objects. Returns an empty list (never
-    raises) if Gemini fails, so resume upload always succeeds even when
-    the AI call doesn't (Section 27: "AI/API failure").
+    Hybrid extraction pipeline:
+    1. Deterministic normalization & regex extraction (fast, accurate, no external dependency).
+    2. Optional Gemini AI extraction if configured.
+    3. Merges and validates against real Skill catalog.
+    Always returns a list of real Skill objects; never crashes.
     """
+    if not resume_text or not resume_text.strip():
+        return []
+
+    # 1. Deterministic extraction via centralized normalization engine
+    detected_map = extract_skills_with_evidence(resume_text)
+    candidate_names = list(detected_map.keys())
+
+    # 2. Optional AI enhancement if Gemini is available
     catalog_names = list(Skill.objects.values_list('name', flat=True))
-    if not catalog_names or not resume_text.strip():
-        return []
+    if catalog_names:
+        try:
+            prompt = build_prompt(resume_text, catalog_names)
+            raw_response = generate_text(prompt)
+            ai_candidates = parse_ai_response(raw_response)
+            candidate_names.extend(ai_candidates)
+        except Exception:
+            # AI call failure is gracefully handled; deterministic results are preserved
+            pass
 
-    prompt = build_prompt(resume_text, catalog_names)
-    try:
-        raw_response = generate_text(prompt)
-    except Exception:
-        return []
-
-    candidate_names = parse_ai_response(raw_response)
     if not candidate_names:
         return []
 
-    return validate_against_catalog(candidate_names)
+    return validate_against_catalog(candidate_names)

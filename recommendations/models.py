@@ -22,16 +22,19 @@ class LearningRoadmap(models.Model):
 
 class RoadmapItem(models.Model):
     PHASE_CHOICES = [
-        (1, 'Phase 1 - Strengthen Fundamentals'),
-        (2, 'Phase 2 - Core Skills'),
-        (3, 'Phase 3 - Advanced Skills'),
-        (4, 'Phase 4 - Portfolio Project'),
+        (1, 'Phase 1 — Programming Fundamentals'),
+        (2, 'Phase 2 — Backend Development'),
+        (3, 'Phase 3 — Advanced & Job-Specific Skills'),
+        (4, 'Phase 4 — Portfolio Project'),
     ]
 
     roadmap = models.ForeignKey(LearningRoadmap, on_delete=models.CASCADE, related_name='items')
     skill_gap = models.ForeignKey(SkillGap, on_delete=models.CASCADE)
     phase = models.PositiveSmallIntegerField(choices=PHASE_CHOICES)
     order = models.PositiveSmallIntegerField(default=0)
+    why_it_matters = models.TextField(blank=True)
+    learning_outcome = models.TextField(blank=True)
+    task_idea = models.TextField(blank=True)
 
     class Meta:
         ordering = ['phase', 'order']

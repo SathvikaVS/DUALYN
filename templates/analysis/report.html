@@ -12,22 +12,39 @@
     </ol>
 </nav>
 
+<!-- Diagnostic Notice / Parsing Warning Banner (If applicable) -->
+{% if analysis.has_warning %}
+<div class="alert alert-warning shadow-sm mb-4 border-warning-subtle d-flex align-items-center gap-3">
+    <i class="bi bi-exclamation-triangle-fill fs-3 text-warning"></i>
+    <div class="flex-grow-1">
+        <strong class="d-block text-ink">Resume Parsing Diagnostic Alert</strong>
+        <span class="text-ink-secondary small">{{ analysis.warning_message }}</span>
+    </div>
+    <a href="{% url 'resumes:upload' %}" class="btn btn-warning btn-sm text-dark fw-semibold">
+        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Re-Upload Resume
+    </a>
+</div>
+{% endif %}
+
 <!-- Executive Report Header -->
 <div class="card mb-4 shadow-sm border-1">
     <div class="card-body p-4">
         <div class="row align-items-center g-4">
             <div class="col-lg-8">
-                <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                         <i class="bi bi-file-earmark-check-fill me-1"></i> Diagnostic Report
                     </span>
                     <span class="text-ink-muted small">
                         <i class="bi bi-clock me-1"></i> {{ analysis.created_at|date:"F d, Y \a\t H:i" }}
                     </span>
+                    <span class="badge bg-secondary-subtle text-secondary">
+                        <i class="bi bi-shield-lock me-1"></i> Verified Audit
+                    </span>
                 </div>
                 <h1 class="h2 fw-bold text-ink mb-2">Skill Gap Report: {{ analysis.job_role.title }}</h1>
                 <p class="text-ink-muted mb-0">
-                    Comprehensive competency audit evaluating declared proficiencies and resume content against target industry expectations.
+                    Comprehensive competency audit evaluating declared skills, uploaded resume evidence, and portfolio projects against industry benchmarks for <strong>{{ analysis.job_role.title }}</strong>.
                 </p>
             </div>
 
@@ -56,7 +73,50 @@
             </div>
         </div>
 
-        <div class="mt-4 pt-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <!-- Transparent Readiness Score Breakdown Panel -->
+        {% if analysis.scoring_breakdown %}
+        <div class="mt-4 pt-3 border-top">
+            <div class="row g-3">
+                <div class="col-md-7">
+                    <div class="p-3 rounded-3 bg-light border small">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-calculator-fill text-cobalt"></i>
+                            <strong class="text-ink">Transparent Scoring Formula:</strong>
+                        </div>
+                        <p class="text-ink-muted mb-1 font-monospace" style="font-size:0.8rem;">
+                            Readiness Score = &Sigma; (Competency Weight &times; Attainment) / &Sigma; (Applicable Weights) &times; 100
+                        </p>
+                        <div class="text-ink-secondary" style="font-size:0.8rem;">
+                            Attained <strong>{{ analysis.scoring_breakdown.attained_weight }}</strong> out of <strong>{{ analysis.scoring_breakdown.total_weight }}</strong> available weight points (<strong>{{ analysis.readiness_score|floatformat:1 }}%</strong>).
+                            Attainment factors: Demonstrated = 100%, Mentioned / Basic = 50%, Needs Improvement = 50%, Missing = 0%.
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="d-flex flex-wrap gap-2 justify-content-start justify-content-md-end align-items-center h-100">
+                        <div class="metric-box py-2 px-3 text-center" style="min-width:70px;">
+                            <span class="metric-number text-success fs-5">{{ analysis.scoring_breakdown.demonstrated_count }}</span>
+                            <div class="metric-label" style="font-size:0.68rem;">Demonstrated</div>
+                        </div>
+                        <div class="metric-box py-2 px-3 text-center" style="min-width:70px;">
+                            <span class="metric-number text-primary fs-5">{{ analysis.scoring_breakdown.mentioned_count }}</span>
+                            <div class="metric-label" style="font-size:0.68rem;">Mentioned</div>
+                        </div>
+                        <div class="metric-box py-2 px-3 text-center" style="min-width:70px;">
+                            <span class="metric-number text-warning-emphasis fs-5">{{ analysis.scoring_breakdown.needs_improvement_count }}</span>
+                            <div class="metric-label" style="font-size:0.68rem;">In Progress</div>
+                        </div>
+                        <div class="metric-box py-2 px-3 text-center" style="min-width:70px;">
+                            <span class="metric-number text-danger fs-5">{{ analysis.scoring_breakdown.missing_count }}</span>
+                            <div class="metric-label" style="font-size:0.68rem;">Missing</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="mt-3 pt-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div class="d-flex align-items-center gap-2">
                 <a href="{% url 'analysis:run' %}" class="btn btn-primary btn-sm">
                     <i class="bi bi-arrow-repeat me-1"></i> Run Another Analysis
@@ -101,16 +161,23 @@
             </span>
             <h3 class="fw-bold mb-0">Competency Breakdown</h3>
         </div>
-        <span class="badge bg-secondary-subtle text-secondary fs-6">{{ gaps|length }} Skills Audited</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary-subtle text-secondary fs-6">{{ gaps|length }} Competencies Audited</span>
+        </div>
     </div>
 
     <div class="row g-3">
     {% for gap in gaps %}
-        <div class="col-md-6">
+        <div class="col-lg-6">
             <div class="card h-100 shadow-sm dualyn-card-interactive">
                 <div class="card-body p-3 p-lg-4">
                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                        <h5 class="fw-bold text-ink mb-0">{{ gap.skill.name }}</h5>
+                        <div>
+                            <h5 class="fw-bold text-ink mb-1">{{ gap.skill.name }}</h5>
+                            <span class="text-ink-muted small" style="font-size:0.75rem;">
+                                Target Level: <strong>{{ gap.required_level|default:"Intermediate" }}</strong>
+                            </span>
+                        </div>
                         <div class="d-flex gap-1 flex-wrap justify-content-end">
                             <span class="badge badge-status-{{ gap.status }}">
                                 {{ gap.get_status_display }}
@@ -121,7 +188,8 @@
                         </div>
                     </div>
 
-                    <p class="text-ink-muted small mb-3">
+                    <!-- Evidence Statement -->
+                    <p class="text-ink-muted small mb-2">
                         {% if gap.reasoning %}
                             {{ gap.reasoning }}
                         {% else %}
@@ -129,11 +197,28 @@
                         {% endif %}
                     </p>
 
+                    <!-- Gap Explanation & Next Step -->
+                    <div class="p-2 mb-3 rounded bg-light border" style="font-size:0.8rem;">
+                        {% if gap.gap_explanation %}
+                        <div class="mb-1 text-ink-secondary">
+                            <strong class="text-ink"><i class="bi bi-arrow-right-circle text-cobalt me-1"></i>Diagnostic:</strong>
+                            {{ gap.gap_explanation }}
+                        </div>
+                        {% endif %}
+                        {% if gap.recommended_step %}
+                        <div class="text-ink-secondary">
+                            <strong class="text-ink"><i class="bi bi-lightbulb text-warning me-1"></i>Next Step:</strong>
+                            {{ gap.recommended_step }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Recommended Learning Actions Accordion -->
                     {% with rec=gap.recommendations.first %}
                     {% if rec and rec.steps %}
                     <details class="clean-accordion">
                         <summary>Recommended Learning Actions ({{ rec.steps|length }} steps)</summary>
-                        <ol class="steps-list">
+                        <ol class="steps-list mt-2">
                             {% for step in rec.steps %}
                             <li>{{ step }}</li>
                             {% endfor %}
@@ -155,42 +240,64 @@
     </div>
 </div>
 
-<!-- SECTION: LEARNING ROADMAP -->
+<!-- SECTION: PHASED LEARNING ROADMAP -->
 {% if analysis.roadmap %}
 <div class="mb-4">
     <div class="mb-3">
         <span class="section-label">
             <i class="bi bi-map-fill"></i> Strategic Trajectory
         </span>
-        <h3 class="fw-bold mb-0">Phased Learning Roadmap</h3>
-        <p class="text-ink-muted small mb-0">Structured path designed to close your missing and in-progress skill gaps.</p>
+        <h3 class="fw-bold mb-0">Dependency-Aware Learning Roadmap</h3>
+        <p class="text-ink-muted small mb-0">
+            A structured learning progression designed to close your missing and in-progress skill gaps in prerequisite order. Verified competencies are excluded.
+        </p>
     </div>
 
     {% regroup analysis.roadmap.items.all by get_phase_display as phase_list %}
     <div class="row g-3">
     {% for phase in phase_list %}
-        <div class="col-md-6 col-lg-3">
+        <div class="col-md-6 col-lg-4">
             <div class="card h-100 shadow-sm border-top border-3 border-cobalt">
                 <div class="card-header-clean bg-white py-3">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-primary-subtle text-primary fw-bold" style="width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.75rem;">
+                        <span class="badge bg-primary-subtle text-primary fw-bold" style="width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem;">
                             {{ forloop.counter }}
                         </span>
                         <h6 class="mb-0 fw-bold text-ink small">{{ phase.grouper }}</h6>
                     </div>
                 </div>
                 <div class="card-body p-3">
-                    <div class="d-flex flex-column gap-2">
+                    <div class="d-flex flex-column gap-3">
                         {% for item in phase.list %}
-                        <div class="p-2 rounded bg-light border d-flex align-items-center justify-content-between small">
-                            <span class="fw-medium text-ink">{{ item.skill_gap.skill.name }}</span>
-                            <span class="badge badge-priority-{{ item.skill_gap.priority }}" style="font-size:0.68rem;">
-                                {{ item.skill_gap.get_priority_display }}
-                            </span>
+                        <div class="p-2 rounded bg-light border">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="fw-bold text-ink small">{{ item.skill_gap.skill.name }}</span>
+                                <span class="badge badge-priority-{{ item.skill_gap.priority }}" style="font-size:0.68rem;">
+                                    {{ item.skill_gap.get_priority_display }}
+                                </span>
+                            </div>
+                            {% if item.why_it_matters %}
+                            <p class="text-ink-muted mb-1" style="font-size:0.75rem;">
+                                {{ item.why_it_matters|truncatechars:100 }}
+                            </p>
+                            {% endif %}
+                            {% if item.task_idea %}
+                            <div class="d-flex align-items-start gap-1 text-ink-secondary" style="font-size:0.72rem;">
+                                <i class="bi bi-hammer text-cobalt mt-1"></i>
+                                <span><strong>Project Task:</strong> {{ item.task_idea }}</span>
+                            </div>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>
                 </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="card p-4 text-center text-ink-muted">
+                <i class="bi bi-trophy fs-1 text-success mb-2"></i>
+                <p class="mb-0">All required competencies are fully demonstrated. You are ready for this role!</p>
             </div>
         </div>
     {% endfor %}

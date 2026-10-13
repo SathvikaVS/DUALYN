@@ -9,6 +9,9 @@ class SkillAnalysis(models.Model):
     job_role = models.ForeignKey(JobRole, on_delete=models.CASCADE)
     readiness_score = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    scoring_breakdown = models.JSONField(default=dict, blank=True)
+    has_warning = models.BooleanField(default=False)
+    warning_message = models.TextField(blank=True)
 
     class Meta:
         ordering = ['-created_at']
@@ -19,9 +22,12 @@ class SkillAnalysis(models.Model):
 
 class SkillGap(models.Model):
     STATUS_CHOICES = [
-        ('covered', 'Covered'),
+        ('demonstrated', 'Demonstrated'),
+        ('covered', 'Demonstrated'),
         ('needs_improvement', 'Needs Improvement'),
-        ('missing', 'Missing'),
+        ('mentioned', 'Mentioned / Basic'),
+        ('missing', 'Missing from Resume'),
+        ('not_assessed', 'Not Assessed'),
     ]
     PRIORITY_CHOICES = [
         ('high', 'High'),
@@ -34,6 +40,10 @@ class SkillGap(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
     reasoning = models.TextField(blank=True)
+    evidence_sources = models.JSONField(default=list, blank=True)
+    required_level = models.CharField(max_length=50, default='Intermediate', blank=True)
+    gap_explanation = models.TextField(blank=True)
+    recommended_step = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.skill.name}: {self.status} ({self.priority})"

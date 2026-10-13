@@ -65,6 +65,20 @@
                     {% endif %}
                 </div>
 
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top mb-3">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">
+                        <i class="bi bi-check-circle-fill me-1"></i> Profile & Diagnostics Connected
+                    </span>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'resumes:sync' resume.pk %}" class="btn btn-sm btn-outline-primary" title="Re-sync competencies with active role benchmarks">
+                            <i class="bi bi-arrow-repeat me-1"></i> Sync Benchmarks
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-sm btn-light border text-ink-secondary">
+                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+
                 {% if resume.extracted_text %}
                 <details class="clean-accordion">
                     <summary>View Parsed Text Content</summary>

@@ -502,7 +502,8 @@ a:hover {
   gap: 5px;
 }
 
-.badge-status-covered {
+.badge-status-covered,
+.badge-status-demonstrated {
   background-color: var(--status-covered-bg);
   color: var(--status-covered-text);
   border: 1px solid var(--status-covered-border);
@@ -515,10 +516,22 @@ a:hover {
   border: 1px solid var(--status-improve-border);
 }
 
+.badge-status-mentioned {
+  background-color: rgba(49, 85, 217, 0.1);
+  color: #2646BC;
+  border: 1px solid rgba(49, 85, 217, 0.25);
+}
+
 .badge-status-missing {
   background-color: var(--status-missing-bg);
   color: var(--status-missing-text);
   border: 1px solid var(--status-missing-border);
+}
+
+.badge-status-not_assessed {
+  background-color: #F1F5F9;
+  color: #64748B;
+  border: 1px solid #CBD5E1;
 }
 
 .badge-priority-high {
