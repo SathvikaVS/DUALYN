@@ -53,13 +53,49 @@
                     </div>
 
                     {% if resume.ai_extracted_skills.all %}
-                    <div class="d-flex flex-wrap gap-1">
-                        {% for s in resume.ai_extracted_skills.all %}
-                        <span class="skill-chip">
-                            <i class="bi bi-check2 text-cobalt small"></i> {{ s.name }}
+                    <div class="d-flex flex-wrap gap-1 mb-2">
+                        {% for comp in resume.get_competencies_with_evidence %}
+                        <span class="skill-chip" title="Section: {{ comp.section }}{% if comp.sentence %} | &quot;{{ comp.sentence }}&quot;{% endif %}">
+                            <i class="bi bi-check2 text-cobalt small"></i> {{ comp.name }}
                         </span>
                         {% endfor %}
                     </div>
+
+                    {% if resume.skills_evidence %}
+                    <details class="clean-accordion mb-2">
+                        <summary style="font-size: 0.78rem;">View Competency Traceability &amp; Evidence ({{ resume.ai_extracted_skills.all|length }})</summary>
+                        <div class="mt-2 p-2 rounded bg-light border" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm table-borderless mb-0" style="font-size: 0.75rem;">
+                                <thead>
+                                    <tr class="text-ink-muted border-bottom">
+                                        <th style="width: 25%;">Competency</th>
+                                        <th style="width: 25%;">Section</th>
+                                        <th style="width: 50%;">Exact Resume Sentence</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for comp in resume.get_competencies_with_evidence %}
+                                    <tr>
+                                        <td class="fw-semibold text-ink">
+                                            {{ comp.name }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-white text-ink-secondary border" style="font-size: 0.68rem;">{{ comp.section }}</span>
+                                        </td>
+                                        <td class="text-ink-secondary">
+                                            {% if comp.sentence %}
+                                                &ldquo;{{ comp.sentence|truncatechars:95 }}&rdquo;
+                                            {% else %}
+                                                <span class="text-muted fst-italic">Mentioned in resume</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                    {% endif %}
                     {% else %}
                     <p class="text-ink-muted small mb-0 fst-italic">No specific catalog competencies matched in this document.</p>
                     {% endif %}

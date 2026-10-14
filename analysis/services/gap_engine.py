@@ -254,12 +254,45 @@ def _gather_competency_evidence(
     catalog_entry = SKILL_CATALOG.get(canonical, {})
     components = catalog_entry.get('components', [])
 
+    # Related technologies for overarching competencies
+    RELATED_SPECIALIZATIONS = {
+        'SQL': ['MySQL', 'PostgreSQL', 'SQLite', 'MariaDB', 'Oracle'],
+        'REST API': ['Django REST Framework', 'FastAPI'],
+        'Git': ['GitHub', 'GitLab'],
+    }
+
     # 1. Declared skills check
     declared_entry = None
     for k in skill_keys:
         if k in declared_map:
             declared_entry = declared_map[k]
             break
+
+    # If not directly declared, check compound component or related specializations
+    if not declared_entry:
+        if canonical in ('HTML & CSS', 'Testing & Debugging') and components:
+            comp_declared = [declared_map.get(comp) for comp in components if comp in declared_map]
+            if len(comp_declared) == len(components):
+                # Both components declared
+                best_level = 'intermediate' if any(cd.level in ('intermediate', 'advanced') for cd in comp_declared) else 'beginner'
+                declared_entry = comp_declared[0]
+            elif comp_declared and canonical == 'Testing & Debugging':
+                cd = comp_declared[0]
+                evidence.append({
+                    'source': 'declared',
+                    'detail': f"Partial competency: {cd.skill.name} declared at {cd.level} level (missing counterpart)",
+                    'level': cd.level,
+                    'strength': 'basic',
+                    'is_partial': True,
+                    'confidence': 0.60,
+                })
+        elif canonical in ('HTML', 'CSS') and 'HTML & CSS' in declared_map:
+            declared_entry = declared_map['HTML & CSS']
+        elif canonical in RELATED_SPECIALIZATIONS:
+            for rel in RELATED_SPECIALIZATIONS[canonical]:
+                if rel in declared_map:
+                    declared_entry = declared_map[rel]
+                    break
 
     if declared_entry:
         strength = 'strong' if declared_entry.level in ('intermediate', 'advanced') else 'basic'
@@ -277,6 +310,15 @@ def _gather_competency_evidence(
         if k in project_skills_map:
             matched_projects.extend(project_skills_map[k])
 
+    if not matched_projects:
+        if canonical in ('HTML', 'CSS') and 'HTML & CSS' in project_skills_map:
+            matched_projects.extend(project_skills_map['HTML & CSS'])
+        elif canonical in RELATED_SPECIALIZATIONS:
+            for rel in RELATED_SPECIALIZATIONS[canonical]:
+                if rel in project_skills_map:
+                    matched_projects.extend(project_skills_map[rel])
+                    break
+
     if matched_projects:
         proj_names = ", ".join(dict.fromkeys(p.name for p in matched_projects))
         evidence.append({
@@ -293,17 +335,47 @@ def _gather_competency_evidence(
             resume_match = resume_skills_map[k]
             break
 
-    # If compound skill (like HTML & CSS), check if both components are found in resume
+    # If compound skill (like HTML & CSS or Testing & Debugging), check components found in resume
     if not resume_match and components:
         comp_matches = [resume_skills_map.get(comp) for comp in components if comp in resume_skills_map]
         if len(comp_matches) == len(components):
+            if any(m.get('strength') == 'strong' for m in comp_matches):
+                comp_strength = 'strong'
+            elif all(m.get('strength') == 'basic' for m in comp_matches):
+                comp_strength = 'basic'
+            else:
+                comp_strength = 'moderate'
+
             resume_match = {
                 'canonical': canonical,
                 'matched_alias': " + ".join(m['matched_alias'] for m in comp_matches),
                 'excerpt': " & ".join(m['excerpt'] for m in comp_matches),
-                'strength': 'strong' if any(m['strength'] == 'strong' for m in comp_matches) else 'moderate',
+                'strength': comp_strength,
                 'is_project_evidence': any(m['is_project_evidence'] for m in comp_matches),
             }
+        elif len(comp_matches) > 0 and canonical == 'Testing & Debugging':
+            single_m = comp_matches[0]
+            present_comp = single_m['canonical']
+            missing_comp = [c for c in components if c not in resume_skills_map][0]
+            evidence.append({
+                'source': 'resume',
+                'detail': f"Partial evidence: demonstrated {present_comp}, but {missing_comp} was not found in resume",
+                'excerpt': single_m.get('excerpt', ''),
+                'strength': 'basic',
+                'is_partial': True,
+                'confidence': 0.60,
+            })
+
+    # If component of compound (e.g. HTML or CSS), check if compound was found in resume
+    if not resume_match and canonical in ('HTML', 'CSS') and 'HTML & CSS' in resume_skills_map:
+        compound_m = resume_skills_map['HTML & CSS']
+        resume_match = {
+            'canonical': canonical,
+            'matched_alias': compound_m.get('matched_alias', canonical),
+            'excerpt': compound_m.get('excerpt', ''),
+            'strength': compound_m.get('strength', 'moderate'),
+            'is_project_evidence': compound_m.get('is_project_evidence', False),
+        }
 
     if resume_match:
         # Check if resume match occurred within a project description in the resume
@@ -356,6 +428,10 @@ def _determine_competency_status(
     """
     if not evidence:
         return 'missing', 0.0
+
+    # If evidence is partial (e.g. only Debugging demonstrated for Testing & Debugging)
+    if any(e.get('is_partial') for e in evidence) and not any(e.get('strength') == 'strong' and not e.get('is_partial') for e in evidence):
+        return 'needs_improvement', 0.5
 
     # Check for practical project evidence
     has_project_evidence = any(e['source'] == 'project' for e in evidence)
