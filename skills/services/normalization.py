@@ -338,6 +338,13 @@ SKILL_CATALOG: Dict[str, Dict[str, Any]] = {
         'aliases': ['vector database', 'vector databases', 'vector db', 'vector search'],
         'pattern': r'\bvector\s+(?:databases?|db|search|embeddings?)\b',
     },
+    'Database Design': {
+        'canonical': 'Database Design',
+        'category': 'Databases',
+        'aliases': ['database design', 'db design', 'schema design', 'database modeling', 'data modeling', 'relational schema design'],
+        'pattern': r'\b(?:database\s+design|db\s+design|schema\s+design|database\s+modeling|data\s+modeling|relational\s+schema\s+design)\b',
+    },
+
 
     # --- Tools, Platforms & DevOps ---
     'Git': {

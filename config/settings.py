@@ -149,3 +149,17 @@ MAILERS = {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
     },
 }
+
+# Session Management
+# Expire session cookie when the browser is closed or session ends
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Save session and update expiry on every request during active use
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Security: Prevent client-side JavaScript access to session cookie
+SESSION_COOKIE_HTTPONLY = True
+
+# Security: Only transmit session cookie over HTTPS in production
+SESSION_COOKIE_SECURE = not DEBUG
+

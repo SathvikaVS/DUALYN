@@ -6,6 +6,7 @@ Defines canonical competency profiles and weights for supported job roles:
 - Backend Developer
 - Full-Stack Developer
 - Data Analyst
+- Java Full Stack Developer
 
 Provides synchronization utilities to populate and maintain JobRole and JobSkill records.
 """
@@ -516,6 +517,108 @@ ROLE_PROFILES: Dict[str, Dict[str, Any]] = {
                 'priority': 'low',
                 'category': 'Tools & Version Control',
                 'why_it_matters': 'Versioning analysis notebooks and automated data extraction scripts.',
+            },
+        ],
+    },
+    'Java Full Stack Developer': {
+        'description': (
+            'Develop and maintain full-stack web applications using Java, Spring Boot, '
+            'HTML, CSS, JavaScript, and SQL. Build secure backend services, design responsive '
+            'user interfaces, manage relational databases, and integrate frontend and backend '
+            'components. Apply object-oriented programming, REST API development, debugging, '
+            'testing, and Git version control. Follow software development best practices to '
+            'build scalable, maintainable, and reliable applications.'
+        ),
+        'competencies': [
+            {
+                'skill': 'Java',
+                'weight': 5,
+                'is_fundamental': True,
+                'required_level': 'Advanced',
+                'priority': 'high',
+                'category': 'Programming',
+                'why_it_matters': 'Core language for building secure, scalable backend services and enterprise web applications.',
+            },
+            {
+                'skill': 'OOP',
+                'weight': 5,
+                'is_fundamental': True,
+                'required_level': 'Advanced',
+                'priority': 'high',
+                'category': 'Core Concepts',
+                'why_it_matters': 'Object-oriented principles (encapsulation, inheritance, polymorphism, abstraction) for modular code design.',
+            },
+            {
+                'skill': 'SQL',
+                'weight': 5,
+                'is_fundamental': True,
+                'required_level': 'Intermediate',
+                'priority': 'high',
+                'category': 'Databases',
+                'why_it_matters': 'Relational data persistence, schema queries, joins, and data integrity operations.',
+            },
+            {
+                'skill': 'Spring Boot',
+                'weight': 5,
+                'is_fundamental': True,
+                'required_level': 'Intermediate',
+                'priority': 'high',
+                'category': 'Backend Frameworks',
+                'why_it_matters': 'Primary enterprise Java framework for building microservices, REST APIs, and production backends.',
+            },
+            {
+                'skill': 'HTML',
+                'weight': 4,
+                'is_fundamental': True,
+                'required_level': 'Intermediate',
+                'priority': 'high',
+                'category': 'Frontend Development',
+                'why_it_matters': 'Standard markup language for structuring web pages and user interface components.',
+            },
+            {
+                'skill': 'CSS',
+                'weight': 4,
+                'is_fundamental': True,
+                'required_level': 'Intermediate',
+                'priority': 'high',
+                'category': 'Frontend Development',
+                'why_it_matters': 'Styling and layout language for responsive user interface presentation and cross-device aesthetics.',
+            },
+            {
+                'skill': 'JavaScript',
+                'weight': 5,
+                'is_fundamental': True,
+                'required_level': 'Intermediate',
+                'priority': 'high',
+                'category': 'Frontend Development',
+                'why_it_matters': 'Client-side programming language for dynamic web UI, DOM manipulation, and asynchronous API calls.',
+            },
+            {
+                'skill': 'REST APIs',
+                'weight': 4,
+                'is_fundamental': True,
+                'required_level': 'Intermediate',
+                'priority': 'high',
+                'category': 'Backend Development',
+                'why_it_matters': 'Architectural style for designing standardized HTTP client-server interfaces and endpoints.',
+            },
+            {
+                'skill': 'Git',
+                'weight': 3,
+                'is_fundamental': False,
+                'required_level': 'Intermediate',
+                'priority': 'medium',
+                'category': 'Tools & Version Control',
+                'why_it_matters': 'Distributed version control system for team collaboration, branching workflows, and tracking changes.',
+            },
+            {
+                'skill': 'Database Design',
+                'weight': 4,
+                'is_fundamental': True,
+                'required_level': 'Intermediate',
+                'priority': 'high',
+                'category': 'Databases',
+                'why_it_matters': 'Designing normalized relational schemas, entity relationships, primary/foreign keys, and indexes.',
             },
         ],
     },
