@@ -1,54 +1,89 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign In — DUALYN{% endblock %}
+{% block title %}Sign in — DUALYN{% endblock %}
 
 {% block content %}
 <div class="auth-wrapper">
-    <div class="auth-card">
-        <div class="auth-header">
-            <div class="auth-icon-badge">
-                <i class="bi bi-shield-lock-fill"></i>
+    <div class="auth-shell">
+        <aside class="auth-visual" aria-label="DUALYN overview">
+            <div class="brand-mini">
+                <span class="brand-icon-box small-brand-icon">
+                    <i class="bi bi-cpu-fill"></i>
+                </span>
+                <span class="brand-title">DUALYN</span>
             </div>
-            <h3 class="fw-bold text-ink mb-1">Welcome back</h3>
-            <p class="text-ink-muted small mb-0">Sign in to your DUALYN career intelligence dashboard</p>
-        </div>
 
-        {% if form.errors %}
-        <div class="alert alert-danger py-2 px-3 small mb-3">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <span>Invalid username or password. Please verify your credentials.</span>
-        </div>
-        {% endif %}
+            <div class="auth-visual-badge">
+                <i class="bi bi-stars"></i> Career clarity, made simple
+            </div>
 
-        <form method="post" novalidate>
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="id_username" class="form-label">Username</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-person"></i></span>
-                    <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username" class="form-control border-start-0 ps-0" placeholder="Enter username">
+            <h1>Know where you stand and what to do next.</h1>
+            <p>Review your strengths, spot the gap, and plan a smarter learning path for the role you want.</p>
+
+            <ul class="auth-highlights">
+                <li><i class="bi bi-check-circle-fill"></i> Resume and skill insights</li>
+                <li><i class="bi bi-check-circle-fill"></i> Goal-based role matching</li>
+                <li><i class="bi bi-check-circle-fill"></i> Clear next steps for growth</li>
+            </ul>
+
+            <div class="auth-metrics">
+                <div>
+                    <strong>68%</strong>
+                    <span>avg readiness</span>
+                </div>
+                <div>
+                    <strong>3-step</strong>
+                    <span>growth flow</span>
                 </div>
             </div>
+        </aside>
 
-            <div class="mb-4">
-                <label for="id_password" class="form-label">Password</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-key"></i></span>
-                    <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control border-start-0 border-end-0 ps-0">
-                    <span class="input-group-text bg-white border-start-0 text-ink-muted toggle-password" style="cursor: pointer;" data-target="id_password">
-                        <i class="bi bi-eye"></i>
-                    </span>
+        <div class="auth-form-panel">
+            <div class="auth-header">
+                <div class="auth-icon-badge">
+                    <i class="bi bi-shield-lock-fill"></i>
                 </div>
+                <h3 class="fw-bold text-ink mb-1">Welcome back</h3>
+                <p class="text-ink-muted small mb-0">Sign in to continue your career plan.</p>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-                Sign In <i class="bi bi-arrow-right ms-2"></i>
-            </button>
-        </form>
+            {% if form.errors %}
+            <div class="alert alert-danger py-2 px-3 small mb-3">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>That username and password didn’t match. Try again.</span>
+            </div>
+            {% endif %}
 
-        <div class="auth-footer">
-            <span>New to DUALYN?</span>
-            <a href="{% url 'accounts:register' %}" class="fw-semibold text-cobalt ms-1">Create an account</a>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_username" class="form-label">Username</label>
+                    <div class="input-group auth-input-group">
+                        <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-person"></i></span>
+                        <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username" class="form-control border-start-0 ps-0" placeholder="Your username">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_password" class="form-label">Password</label>
+                    <div class="input-group auth-input-group">
+                        <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-key"></i></span>
+                        <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control border-start-0 border-end-0 ps-0" placeholder="Your password">
+                        <button type="button" class="input-group-text bg-white border-start-0 text-ink-muted toggle-password" data-target="id_password" aria-label="Show password" aria-pressed="false">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                    Sign in <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <span>New to DUALYN?</span>
+                <a href="{% url 'accounts:register' %}" class="fw-semibold text-cobalt ms-1">Create a free account</a>
+            </div>
         </div>
     </div>
 </div>
@@ -61,15 +96,20 @@
             const targetId = this.getAttribute('data-target');
             const targetInput = document.getElementById(targetId);
             const icon = this.querySelector('i');
-            
-            if (targetInput.type === 'password') {
+            const isVisible = targetInput.type === 'password';
+
+            if (isVisible) {
                 targetInput.type = 'text';
                 icon.classList.remove('bi-eye');
                 icon.classList.add('bi-eye-slash');
+                this.setAttribute('aria-label', 'Hide password');
+                this.setAttribute('aria-pressed', 'true');
             } else {
                 targetInput.type = 'password';
                 icon.classList.remove('bi-eye-slash');
                 icon.classList.add('bi-eye');
+                this.setAttribute('aria-label', 'Show password');
+                this.setAttribute('aria-pressed', 'false');
             }
         });
     });

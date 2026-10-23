@@ -1,99 +1,76 @@
 {% extends 'base.html' %}
 
-{% block title %}Analysis History — DUALYN{% endblock %}
+{% block title %}My progress — DUALYN{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<header class="page-heading page-heading-actions">
     <div>
-        <span class="section-label">
-            <i class="bi bi-clock-history"></i> Historical Benchmarks
-        </span>
-        <h1 class="h2 mb-1">Career Analysis History</h1>
-        <p class="text-ink-muted mb-0">Track your score trajectories, skill evolution, and past diagnostic reports.</p>
+        <span class="section-label"><i class="bi bi-graph-up-arrow"></i> Your progress</span>
+        <h1>Role checks</h1>
+        <p>Come back to a result or compare how your skills have changed.</p>
     </div>
-    <div class="d-flex align-items-center gap-2">
-        <a href="{% url 'analysis:compare' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left-right"></i> Compare Analyses
-        </a>
-        <a href="{% url 'analysis:run' %}" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i> Run New Benchmark
-        </a>
+    <div class="page-heading-buttons">
+        {% if analyses|length > 1 %}
+        <a href="{% url 'analysis:compare' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left-right me-1"></i> Compare results</a>
+        {% endif %}
+        <a href="{% url 'analysis:run' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Check a role</a>
     </div>
-</div>
+</header>
 
-<div class="card shadow-sm border-1">
-    <div class="card-header-clean bg-white">
-        <div class="d-flex align-items-center gap-2">
-            <span class="brand-icon-box" style="width:28px; height:28px; font-size:0.85rem;">
-                <i class="bi bi-journal-text"></i>
-            </span>
-            <h5 class="mb-0 fw-bold">All Completed Benchmarks</h5>
+<section class="card page-table-card">
+    <div class="card-header-clean">
+        <div>
+            <h2 class="h5 mb-1">Your past results</h2>
+            <p class="text-ink-muted small mb-0">Each check is a snapshot of your skills at that time.</p>
         </div>
-        <span class="badge bg-secondary-subtle text-secondary">{{ analyses|length }} Total</span>
+        <span class="count-badge">{{ analyses|length }} check{% if analyses|length != 1 %}s{% endif %}</span>
     </div>
-
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table dualyn-table">
-                <thead>
-                    <tr>
-                        <th>Target Job Role</th>
-                        <th>Readiness Score</th>
-                        <th>Status</th>
-                        <th>Analysis Date</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for a in analyses %}
-                    <tr>
-                        <td>
-                            <span class="fw-bold text-ink d-block">{{ a.job_role.title }}</span>
-                            <span class="text-ink-muted small">Diagnostic ID #{{ a.pk }}</span>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="progress flex-grow-1" style="height: 7px; width: 80px;">
-                                    <div class="progress-bar bg-cobalt" style="width: {{ a.readiness_score }}%;"></div>
-                                </div>
-                                <span class="fw-bold text-ink">{{ a.readiness_score|floatformat:0 }}%</span>
+    <div class="table-responsive">
+        <table class="table dualyn-table mb-0">
+            <thead>
+                <tr><th>Role</th><th>Skills match</th><th>What it means</th><th>Date</th><th><span class="visually-hidden">Action</span></th></tr>
+            </thead>
+            <tbody>
+                {% for analysis in analyses %}
+                <tr>
+                    <td>
+                        <strong class="d-block">{{ analysis.job_role.title }}</strong>
+                        <span class="text-ink-muted small">Check #{{ analysis.pk }}</span>
+                    </td>
+                    <td>
+                        <div class="history-score">
+                            <div class="progress" role="progressbar" aria-label="Skills match" aria-valuenow="{{ analysis.readiness_score|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar bg-cobalt" style="width: {{ analysis.readiness_score }}%"></div>
                             </div>
-                        </td>
-                        <td>
-                            {% if a.readiness_score >= 80 %}
-                                <span class="badge badge-status-covered">Highly Qualified</span>
-                            {% elif a.readiness_score >= 50 %}
-                                <span class="badge badge-status-needs_improvement">Competitive</span>
-                            {% else %}
-                                <span class="badge badge-status-missing">Developing</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-ink-muted small">
-                            <i class="bi bi-calendar-event me-1"></i> {{ a.created_at|date:"M d, Y" }}
-                            <span class="d-block" style="font-size:0.75rem;">{{ a.created_at|date:"H:i" }}</span>
-                        </td>
-                        <td class="text-end">
-                            <div class="d-inline-flex gap-2">
-                                <a href="{% url 'analysis:report' a.pk %}" class="btn btn-outline-primary btn-sm">
-                                    View Report <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-ink-muted">
-                            <i class="bi bi-journal-x fs-1 text-ink-light d-block mb-2"></i>
-                            <p class="mb-3">No analyses completed yet.</p>
-                            <a href="{% url 'analysis:run' %}" class="btn btn-primary btn-sm">
-                                <i class="bi bi-lightning-charge-fill me-1"></i> Run Your First Analysis
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                            <strong>{{ analysis.readiness_score|floatformat:0 }}%</strong>
+                        </div>
+                    </td>
+                    <td>
+                        {% if analysis.readiness_score >= 80 %}
+                        <span class="badge badge-status-covered">Strong match</span>
+                        {% elif analysis.readiness_score >= 50 %}
+                        <span class="badge badge-status-needs_improvement">Building skills</span>
+                        {% else %}
+                        <span class="badge badge-status-missing">Getting started</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-ink-muted small">{{ analysis.created_at|date:"M d, Y" }}</td>
+                    <td class="text-end"><a href="{% url 'analysis:report' analysis.pk %}" class="btn btn-outline-primary btn-sm">View result <i class="bi bi-arrow-right ms-1"></i></a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <span class="empty-state-icon"><i class="bi bi-graph-up"></i></span>
+                            <h3>Your progress will show up here.</h3>
+                            <p>Start with one role check to see what you already know and what to learn next.</p>
+                            <a href="{% url 'analysis:run' %}" class="btn btn-primary">Check a role</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-</div>
+</section>
 {% endblock %}

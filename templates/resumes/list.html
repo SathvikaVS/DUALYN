@@ -1,147 +1,86 @@
 {% extends 'base.html' %}
 
-{% block title %}Resume Library — DUALYN{% endblock %}
+{% block title %}My resumes — DUALYN{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+<header class="page-heading page-heading-actions">
     <div>
-        <span class="section-label">
-            <i class="bi bi-file-earmark-person-fill"></i> Document Parsing
-        </span>
-        <h1 class="h2 mb-1">Resume Library</h1>
-        <p class="text-ink-muted mb-0">Upload your CV to automatically extract verified technical keywords and competencies.</p>
+        <span class="section-label"><i class="bi bi-file-earmark-text"></i> Your experience</span>
+        <h1>My resumes</h1>
+        <p>Review skills found in your resumes and keep your role checks up to date.</p>
     </div>
-    <div>
-        <a href="{% url 'resumes:upload' %}" class="btn btn-primary">
-            <i class="bi bi-cloud-arrow-up-fill"></i> Upload New Resume
-        </a>
-    </div>
-</div>
+    <a href="{% url 'resumes:upload' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add a resume</a>
+</header>
 
 <div class="row g-4">
     {% for resume in resumes %}
     <div class="col-lg-6">
-        <div class="card h-100 shadow-sm border-1">
-            <div class="card-header-clean bg-white">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="brand-icon-box" style="width:32px; height:32px; font-size:1rem;">
-                        <i class="bi bi-file-earmark-pdf-fill"></i>
-                    </span>
-                    <div style="max-width: 320px;">
-                        <h6 class="mb-0 fw-bold text-ink text-truncate" title="{{ resume.file.name }}">
-                            {{ resume.file.name }}
-                        </h6>
-                        <span class="text-ink-muted small" style="font-size:0.75rem;">
-                            Uploaded {{ resume.uploaded_at|date:"M d, Y \a\t H:i" }}
-                        </span>
-                    </div>
-                </div>
-                <span class="badge bg-success-subtle text-success border border-success-subtle">
-                    <i class="bi bi-check-circle-fill me-1"></i> Parsed
-                </span>
-            </div>
-
-            <div class="card-body p-4">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="small fw-bold text-ink-muted text-uppercase" style="letter-spacing:0.04em; font-size:0.72rem;">
-                            AI-Extracted Competencies
-                        </span>
-                        <span class="badge bg-secondary-subtle text-secondary small">
-                            {{ resume.ai_extracted_skills.all|length }} detected
-                        </span>
-                    </div>
-
-                    {% if resume.ai_extracted_skills.all %}
-                    <div class="d-flex flex-wrap gap-1 mb-2">
-                        {% for comp in resume.get_competencies_with_evidence %}
-                        <span class="skill-chip" title="Section: {{ comp.section }}{% if comp.sentence %} | &quot;{{ comp.sentence }}&quot;{% endif %}">
-                            <i class="bi bi-check2 text-cobalt small"></i> {{ comp.name }}
-                        </span>
-                        {% endfor %}
-                    </div>
-
-                    {% if resume.skills_evidence %}
-                    <details class="clean-accordion mb-2">
-                        <summary style="font-size: 0.78rem;">View Competency Traceability &amp; Evidence ({{ resume.ai_extracted_skills.all|length }})</summary>
-                        <div class="mt-2 p-2 rounded bg-light border" style="max-height: 200px; overflow-y: auto;">
-                            <table class="table table-sm table-borderless mb-0" style="font-size: 0.75rem;">
-                                <thead>
-                                    <tr class="text-ink-muted border-bottom">
-                                        <th style="width: 25%;">Competency</th>
-                                        <th style="width: 25%;">Section</th>
-                                        <th style="width: 50%;">Exact Resume Sentence</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for comp in resume.get_competencies_with_evidence %}
-                                    <tr>
-                                        <td class="fw-semibold text-ink">
-                                            {{ comp.name }}
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-white text-ink-secondary border" style="font-size: 0.68rem;">{{ comp.section }}</span>
-                                        </td>
-                                        <td class="text-ink-secondary">
-                                            {% if comp.sentence %}
-                                                &ldquo;{{ comp.sentence|truncatechars:95 }}&rdquo;
-                                            {% else %}
-                                                <span class="text-muted fst-italic">Mentioned in resume</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </details>
-                    {% endif %}
-                    {% else %}
-                    <p class="text-ink-muted small mb-0 fst-italic">No specific catalog competencies matched in this document.</p>
-                    {% endif %}
-                </div>
-
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top mb-3">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">
-                        <i class="bi bi-check-circle-fill me-1"></i> Profile & Diagnostics Connected
-                    </span>
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'resumes:sync' resume.pk %}" class="btn btn-sm btn-outline-primary" title="Re-sync competencies with active role benchmarks">
-                            <i class="bi bi-arrow-repeat me-1"></i> Sync Benchmarks
-                        </a>
-                        <a href="{% url 'dashboard' %}" class="btn btn-sm btn-light border text-ink-secondary">
-                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                        </a>
+        <article class="card resume-card h-100">
+            <div class="card-body">
+                <div class="resume-card-heading">
+                    <span class="resume-file-icon"><i class="bi bi-file-earmark-text"></i></span>
+                    <div class="resume-card-title">
+                        <h2 title="{{ resume.file.name }}">{{ resume.file.name }}</h2>
+                        <span>Added {{ resume.uploaded_at|date:"M d, Y" }}</span>
                     </div>
                 </div>
 
-                {% if resume.extracted_text %}
-                <details class="clean-accordion">
-                    <summary>View Parsed Text Content</summary>
-                    <div class="mt-2 p-3 rounded bg-light border" style="max-height: 180px; overflow-y: auto;">
-                        <pre class="small text-ink-secondary mb-0" style="white-space: pre-wrap; font-family: monospace; font-size: 0.8rem;">{{ resume.extracted_text|truncatechars:1000 }}</pre>
+                <div class="resume-skills-heading">
+                    <strong>Skills found</strong>
+                    <span class="count-badge">{{ resume.ai_extracted_skills.all|length }}</span>
+                </div>
+                {% if resume.ai_extracted_skills.all %}
+                <div class="skill-chip-list mb-3">
+                    {% for competency in resume.get_competencies_with_evidence %}
+                    <span class="skill-chip" title="Found in {{ competency.section }}{% if competency.sentence %}: {{ competency.sentence }}{% endif %}">{{ competency.name }}</span>
+                    {% endfor %}
+                </div>
+                {% if resume.skills_evidence %}
+                <details class="clean-accordion resume-details">
+                    <summary>Where these skills were found</summary>
+                    <div class="table-responsive mt-2">
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Skill</th><th>Section</th><th>Resume text</th></tr></thead>
+                            <tbody>
+                                {% for competency in resume.get_competencies_with_evidence %}
+                                <tr>
+                                    <td class="fw-semibold">{{ competency.name }}</td>
+                                    <td>{{ competency.section }}</td>
+                                    <td>{% if competency.sentence %}“{{ competency.sentence|truncatechars:120 }}”{% else %}<span class="text-ink-muted">Mentioned in resume</span>{% endif %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </details>
                 {% endif %}
+                {% else %}
+                <p class="text-ink-muted small">No skills from the DUALYN catalog were found. You can add skills yourself on the <a href="{% url 'skills:my_skills' %}">My skills</a> page.</p>
+                {% endif %}
+
+                <div class="resume-card-actions">
+                    <a href="{% url 'resumes:sync' resume.pk %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-repeat me-1"></i> Refresh role checks</a>
+                    <a href="{% url 'skills:my_skills' %}" class="btn btn-outline-secondary btn-sm">My skills</a>
+                </div>
+                {% if resume.extracted_text %}
+                <details class="clean-accordion resume-details">
+                    <summary>View text found in resume</summary>
+                    <pre class="resume-text-preview">{{ resume.extracted_text|truncatechars:1000 }}</pre>
+                </details>
+                {% endif %}
             </div>
-        </div>
+        </article>
     </div>
     {% empty %}
     <div class="col-12">
-        <div class="card shadow-sm border-1 text-center py-5 px-4">
-            <div class="brand-icon-box mx-auto mb-3" style="width: 56px; height: 56px; font-size: 1.6rem;">
-                <i class="bi bi-file-earmark-arrow-up"></i>
+        <section class="card">
+            <div class="empty-state">
+                <span class="empty-state-icon"><i class="bi bi-file-earmark-arrow-up"></i></span>
+                <h2>No resume added yet.</h2>
+                <p>Add a PDF or DOCX resume to find skills you can use in a role check.</p>
+                <a href="{% url 'resumes:upload' %}" class="btn btn-primary">Add a resume</a>
             </div>
-            <h4 class="fw-bold mb-2">No resumes uploaded yet</h4>
-            <p class="text-ink-muted mx-auto mb-4" style="max-width: 480px;">
-                Upload your resume (PDF or DOCX) to automatically detect your technical skills and include them in your career readiness scoring.
-            </p>
-            <div>
-                <a href="{% url 'resumes:upload' %}" class="btn btn-primary">
-                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> Upload Your First Resume
-                </a>
-            </div>
-        </div>
+        </section>
     </div>
     {% endfor %}
 </div>

@@ -1,167 +1,115 @@
 {% extends 'base.html' %}
 
-{% block title %}Compare Analyses — DUALYN{% endblock %}
+{% block title %}Compare progress — DUALYN{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <span class="section-label">
-        <i class="bi bi-arrow-left-right"></i> Progression Diagnostics
-    </span>
-    <h1 class="h2 mb-1">Compare Career Benchmarks</h1>
-    <p class="text-ink-muted mb-0">Evaluate competency shifts and readiness score changes across two diagnostic points in time.</p>
-</div>
+<header class="page-heading">
+    <span class="section-label"><i class="bi bi-arrow-left-right"></i> Your progress</span>
+    <h1>See how far you’ve come.</h1>
+    <p>Compare two role checks to see which skills have changed.</p>
+</header>
 
-<!-- Comparison Selector Form -->
-<div class="card mb-4 shadow-sm border-1">
-    <div class="card-header-clean bg-white">
-        <div class="d-flex align-items-center gap-2">
-            <span class="brand-icon-box" style="width:28px; height:28px; font-size:0.85rem;">
-                <i class="bi bi-funnel-fill"></i>
-            </span>
-            <h6 class="mb-0 fw-bold">Select Benchmarks to Compare</h6>
-        </div>
-    </div>
-    <div class="card-body p-4">
+{% if analyses|length > 1 %}
+<section class="card flow-card compare-selector">
+    <div class="card-body">
+        <h2 class="h5">Choose two results</h2>
+        <p class="text-ink-muted small">Select an earlier result and a later one. They can be for different roles.</p>
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-5">
-                <label class="form-label">Earlier Benchmark (Baseline)</label>
-                <select name="old" class="form-select">
-                    {% for a in analyses %}
-                    <option value="{{ a.pk }}" {% if old and old.pk == a.pk %}selected{% endif %}>
-                        {{ a.job_role.title }} — {{ a.readiness_score|floatformat:0 }}% ({{ a.created_at|date:"M d, Y" }})
+                <label for="compare-old" class="form-label">Earlier result</label>
+                <select id="compare-old" name="old" class="form-select" required>
+                    {% for analysis in analyses %}
+                    <option value="{{ analysis.pk }}" {% if old and old.pk == analysis.pk %}selected{% endif %}>
+                        {{ analysis.job_role.title }} — {{ analysis.readiness_score|floatformat:0 }}% ({{ analysis.created_at|date:"M d, Y" }})
                     </option>
                     {% endfor %}
                 </select>
             </div>
             <div class="col-md-5">
-                <label class="form-label">Later Benchmark (Current)</label>
-                <select name="new" class="form-select">
-                    {% for a in analyses %}
-                    <option value="{{ a.pk }}" {% if new and new.pk == a.pk %}selected{% endif %}>
-                        {{ a.job_role.title }} — {{ a.readiness_score|floatformat:0 }}% ({{ a.created_at|date:"M d, Y" }})
+                <label for="compare-new" class="form-label">Later result</label>
+                <select id="compare-new" name="new" class="form-select" required>
+                    {% for analysis in analyses %}
+                    <option value="{{ analysis.pk }}" {% if new and new.pk == analysis.pk %}selected{% endif %}>
+                        {{ analysis.job_role.title }} — {{ analysis.readiness_score|floatformat:0 }}% ({{ analysis.created_at|date:"M d, Y" }})
                     </option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-arrow-left-right me-1"></i> Compare
-                </button>
-            </div>
+            <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Compare</button></div>
         </form>
     </div>
-</div>
+</section>
+{% else %}
+<section class="card">
+    <div class="empty-state">
+        <span class="empty-state-icon"><i class="bi bi-arrow-left-right"></i></span>
+        <h2>Add one more result to compare.</h2>
+        <p>Complete at least two role checks to see how your skills have changed over time.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+            {% if analyses %}
+            <a href="{% url 'analysis:history' %}" class="btn btn-outline-secondary">View your result</a>
+            {% endif %}
+            <a href="{% url 'analysis:run' %}" class="btn btn-primary">Check a role</a>
+        </div>
+    </div>
+</section>
+{% endif %}
 
 {% if error %}
-<div class="alert alert-warning shadow-sm mb-4">
-    <i class="bi bi-exclamation-triangle-fill fs-5"></i>
-    <div>{{ error }}</div>
-</div>
+<div class="alert alert-warning" role="alert"><i class="bi bi-info-circle me-2"></i>{{ error }}</div>
 {% endif %}
 
 {% if result %}
 {% if different_roles %}
-<div class="alert alert-info shadow-sm mb-4">
-    <i class="bi bi-info-circle-fill fs-5"></i>
-    <div>These analyses target different career roles; comparison highlights shared competencies.</div>
-</div>
+<div class="alert alert-info" role="status"><i class="bi bi-info-circle me-2"></i>These checks are for different roles. The comparison focuses on skills they share.</div>
 {% endif %}
-
-<!-- Score Shift Hero Card -->
-<div class="card mb-4 shadow-sm border-1">
-    <div class="card-body p-4">
-        <div class="row align-items-center g-4">
-            <div class="col-md-6">
-                <span class="text-ink-muted small text-uppercase fw-bold" style="letter-spacing:0.05em; font-size:0.72rem;">Readiness Score Evolution</span>
-                <div class="d-flex align-items-baseline gap-3 mt-1">
-                    <span class="fs-2 fw-bold text-ink-muted">{{ old.readiness_score|floatformat:0 }}%</span>
-                    <span class="fs-3 text-ink-light">&rarr;</span>
-                    <span class="fs-1 fw-bold text-ink">{{ new.readiness_score|floatformat:0 }}%</span>
-                    <span class="badge {% if result.score_change >= 0 %}bg-success-subtle text-success border border-success-subtle{% else %}bg-danger-subtle text-danger border border-danger-subtle{% endif %} fs-6 py-2 px-3">
-                        {% if result.score_change > 0 %}+{% endif %}{{ result.score_change }} points
-                    </span>
-                </div>
-            </div>
-
-            <div class="col-md-6 text-md-end">
-                <div class="d-inline-flex gap-3">
-                    <div class="metric-box py-2 px-3 text-start">
-                        <span class="metric-number text-success fs-4">{{ result.improved_count }}</span>
-                        <div class="metric-label" style="font-size:0.7rem;">Skills Improved</div>
-                    </div>
-                    <div class="metric-box py-2 px-3 text-start">
-                        <span class="metric-number text-danger fs-4">{{ result.declined_count }}</span>
-                        <div class="metric-label" style="font-size:0.7rem;">Skills Declined</div>
-                    </div>
-                </div>
-            </div>
+<section class="card compare-summary-card mb-4">
+    <div class="card-body">
+        <div class="compare-scores">
+            <div><span>Earlier</span><strong>{{ old.readiness_score|floatformat:0 }}%</strong><small>{{ old.job_role.title }}</small></div>
+            <i class="bi bi-arrow-right"></i>
+            <div><span>Later</span><strong>{{ new.readiness_score|floatformat:0 }}%</strong><small>{{ new.job_role.title }}</small></div>
+        </div>
+        <div class="compare-change {% if result.score_change < 0 %}is-down{% elif result.score_change == 0 %}is-even{% endif %}">
+            <strong>{% if result.score_change > 0 %}+{% endif %}{{ result.score_change }}</strong>
+            <span>percentage points</span>
+        </div>
+        <div class="compare-counts">
+            <div><strong>{{ result.improved_count }}</strong><span>Skills improved</span></div>
+            <div><strong>{{ result.declined_count }}</strong><span>Skills to revisit</span></div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- Detailed Competency Trajectory Table -->
-<div class="card shadow-sm border-1">
-    <div class="card-header-clean bg-white">
-        <h5 class="mb-0 fw-bold">Skill-by-Skill Trajectory Breakdown</h5>
+<section class="card page-table-card">
+    <div class="card-header-clean">
+        <div><h2 class="h5 mb-1">Skill changes</h2><p class="text-ink-muted small mb-0">A side-by-side view of your skills in both checks.</p></div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table dualyn-table">
-                <thead>
-                    <tr>
-                        <th>Competency</th>
-                        <th>Baseline Status</th>
-                        <th>Current Status</th>
-                        <th>Trajectory</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for c in result.changes %}
-                    <tr>
-                        <td>
-                            <span class="fw-bold text-ink">{{ c.skill.name }}</span>
-                        </td>
-                        <td>
-                            {% if c.old_status %}
-                                <span class="badge badge-status-{{ c.old_status }}">{{ c.old_status|title }}</span>
-                            {% else %}
-                                <span class="text-ink-muted small">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if c.new_status %}
-                                <span class="badge badge-status-{{ c.new_status }}">{{ c.new_status|title }}</span>
-                            {% else %}
-                                <span class="text-ink-muted small">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if c.change == 'improved' %}
-                                <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                    <i class="bi bi-arrow-up-right"></i> Improved
-                                </span>
-                            {% elif c.change == 'declined' %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
-                                    <i class="bi bi-arrow-down-right"></i> Declined
-                                </span>
-                            {% else %}
-                                <span class="badge bg-light text-secondary border">
-                                    Unchanged
-                                </span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center py-4 text-ink-muted">
-                            No comparable skills found between these two analyses.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="table-responsive">
+        <table class="table dualyn-table mb-0">
+            <thead><tr><th>Skill</th><th>Earlier</th><th>Later</th><th>Change</th></tr></thead>
+            <tbody>
+                {% for change in result.changes %}
+                <tr>
+                    <td class="fw-semibold">{{ change.skill.name }}</td>
+                    <td>{% if change.old_status %}<span class="badge badge-status-{{ change.old_status }}">{{ change.old_status|title }}</span>{% else %}<span class="text-ink-muted">—</span>{% endif %}</td>
+                    <td>{% if change.new_status %}<span class="badge badge-status-{{ change.new_status }}">{{ change.new_status|title }}</span>{% else %}<span class="text-ink-muted">—</span>{% endif %}</td>
+                    <td>
+                        {% if change.change == 'improved' %}
+                        <span class="change-label change-up"><i class="bi bi-arrow-up-right"></i> Improved</span>
+                        {% elif change.change == 'declined' %}
+                        <span class="change-label change-down"><i class="bi bi-arrow-down-right"></i> Revisit</span>
+                        {% else %}
+                        <span class="change-label change-same">No change</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-ink-muted py-4">No shared skills to compare in these results.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-</div>
+</section>
 {% endif %}
 {% endblock %}
