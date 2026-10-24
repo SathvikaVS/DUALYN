@@ -133,6 +133,28 @@ class AnalysisPermissionTests(TestCase):
         response = client.get(reverse('analysis:report', args=[self.analysis.pk]))
         self.assertEqual(response.status_code, 200)
 
+    def test_compare_page_renders_with_empty_and_selected_comparison_states(self):
+        client = Client()
+        client.force_login(self.alice)
+        url = reverse('analysis:compare')
+
+        response = client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Add one more result to compare.')
+
+        later = SkillAnalysis.objects.create(
+            student=self.alice,
+            job_role=self.job,
+            readiness_score=65,
+        )
+        response = client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Choose two results')
+
+        response = client.get(url, {'old': self.analysis.pk, 'new': later.pk})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Skill changes')
+
     def test_anonymous_user_is_redirected_to_login(self):
         client = Client()
         response = client.get(reverse('analysis:report', args=[self.analysis.pk]))
