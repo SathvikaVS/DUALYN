@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Share feedback — DUALYN{% endblock %}
+
+{% block extra_head %}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/feedback.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="feedback-page">
+    <header class="feedback-heading">
+        <span class="section-label"><i class="bi bi-chat-heart"></i> Help us improve</span>
+        <h1>Your feedback makes DUALYN better.</h1>
+        <p>Tell us what your experience was like. A quick rating and a few words help us make the next visit clearer and more useful.</p>
+    </header>
+
+    <div class="feedback-layout">
+        <section class="feedback-form-card" aria-labelledby="feedback-form-title">
+            <div class="feedback-form-heading">
+                <span class="feedback-form-icon"><i class="bi bi-pencil-square"></i></span>
+                <div>
+                    <h2 id="feedback-form-title">Share your experience</h2>
+                    <p>All fields are required. It usually takes less than a minute.</p>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                </div>
+                {% endif %}
+
+                <fieldset class="feedback-rating-field mb-4">
+                    <legend class="form-label">{{ form.rating.label }}</legend>
+                    <div class="feedback-rating-options">
+                        {% for value, label in form.fields.rating.choices %}
+                        <input
+                            type="radio"
+                            name="{{ form.rating.html_name }}"
+                            id="rating-{{ value }}"
+                            value="{{ value }}"
+                            {% if form.rating.value|stringformat:"s" == value|stringformat:"s" %}checked{% endif %}
+                            required
+                        >
+                        <label for="rating-{{ value }}" title="{{ label }}">
+                            <i class="bi bi-star-fill" aria-hidden="true"></i>
+                            <span>{{ label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% for error in form.rating.errors %}<div class="text-danger small mt-2">{{ error }}</div>{% endfor %}
+                </fieldset>
+
+                <div class="mb-3">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% for error in form.title.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="{{ form.message.id_for_label }}" class="form-label">{{ form.message.label }}</label>
+                    {{ form.message }}
+                    <div class="form-text">{{ form.message.help_text }}</div>
+                    {% for error in form.message.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                </div>
+
+                <button type="submit" class="btn btn-primary feedback-submit">
+                    Send feedback <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+        </section>
+
+        <aside class="feedback-side-panel">
+            <div class="feedback-side-icon"><i class="bi bi-lightbulb"></i></div>
+            <span class="feedback-side-kicker">A little guidance</span>
+            <h2>What should I include?</h2>
+            <p>Share the details that would help us make your experience smoother.</p>
+            <ul>
+                <li><i class="bi bi-check2"></i> What you were trying to do</li>
+                <li><i class="bi bi-check2"></i> What felt clear or confusing</li>
+                <li><i class="bi bi-check2"></i> One change that would help</li>
+            </ul>
+            <div class="feedback-privacy-note">
+                <i class="bi bi-shield-check"></i>
+                <span>Your feedback is linked to your account so our team can understand and improve the experience.</span>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endblock %}

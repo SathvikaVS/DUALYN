@@ -4,48 +4,26 @@
 
 {% block content %}
 <div class="auth-wrapper">
-    <div class="auth-shell auth-shell-register">
-        <aside class="auth-visual" aria-label="DUALYN overview">
-            <div class="brand-mini">
-                <span class="brand-icon-box small-brand-icon">
-                    <i class="bi bi-cpu-fill"></i>
-                </span>
-                <span class="brand-title">DUALYN</span>
+    <div class="auth-layout auth-layout-register">
+    <aside class="auth-aside">
+        <span class="auth-aside-kicker"><i class="bi bi-stars"></i> A good place to begin</span>
+        <h2>Make your next move with confidence.</h2>
+        <p>Build a clearer picture of your skills and choose a direction that feels right for you.</p>
+        <ul class="auth-benefits">
+            <li><i class="bi bi-check-circle"></i> Free to get started</li>
+            <li><i class="bi bi-check-circle"></i> Add a resume when you’re ready</li>
+            <li><i class="bi bi-check-circle"></i> Your plan, at your own pace</li>
+        </ul>
+        <span class="auth-aside-footnote"><i class="bi bi-shield-check"></i> Your account is yours to manage.</span>
+    </aside>
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon-badge">
+                <i class="bi bi-person-plus-fill"></i>
             </div>
-
-            <div class="auth-visual-badge">
-                <i class="bi bi-rocket-takeoff"></i> Start with confidence
-            </div>
-
-            <h1>Build the next version of your career.</h1>
-            <p>Map your current skills, explore promising roles, and get practical steps to grow without guesswork.</p>
-
-            <ul class="auth-highlights">
-                <li><i class="bi bi-check-circle-fill"></i> Personalized skill analysis</li>
-                <li><i class="bi bi-check-circle-fill"></i> Clear role recommendations</li>
-                <li><i class="bi bi-check-circle-fill"></i> Better decision-making for your goals</li>
-            </ul>
-
-            <div class="auth-metrics">
-                <div>
-                    <strong>1 min</strong>
-                    <span>to start</span>
-                </div>
-                <div>
-                    <strong>100%</strong>
-                    <span>free access</span>
-                </div>
-            </div>
-        </aside>
-
-        <div class="auth-form-panel">
-            <div class="auth-header">
-                <div class="auth-icon-badge">
-                    <i class="bi bi-person-plus-fill"></i>
-                </div>
-                <h3 class="fw-bold text-ink mb-1">Create your account</h3>
-                <p class="text-ink-muted small mb-0">A few details, then you can explore your first role.</p>
-            </div>
+            <h1 class="h3 fw-bold text-ink mb-1">Create your account</h1>
+            <p class="text-ink-muted small mb-0">It only takes a minute to get started.</p>
+        </div>
 
             {% if form.non_field_errors %}
             <div class="alert alert-danger py-2 px-3 small mb-3">
@@ -74,70 +52,70 @@
                     {% endif %}
                 </div>
 
-                <div class="mb-3">
-                    <label for="{{ form.email.id_for_label }}" class="form-label">Email address</label>
-                    <div class="input-group auth-input-group">
-                        <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-envelope"></i></span>
-                        <input type="email" name="email" required id="{{ form.email.id_for_label }}"
-                               value="{{ form.email.value|default:'' }}"
-                               class="form-control border-start-0 ps-0 {% if form.email.errors %}is-invalid{% endif %}"
-                               placeholder="you@domain.com">
-                    </div>
-                    {% if form.email.errors %}
-                    <div class="text-danger small mt-1">
-                        {{ form.email.errors.0 }}
-                    </div>
-                    {% endif %}
+            <div class="mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">Email address</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-envelope"></i></span>
+                    <input type="email" name="email" required id="{{ form.email.id_for_label }}"
+                           value="{{ form.email.value|default:'' }}"
+                           class="form-control border-start-0 ps-0 {% if form.email.errors %}is-invalid{% endif %}"
+                           placeholder="you@domain.com">
                 </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
-                    <div class="input-group auth-input-group">
-                        <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-lock"></i></span>
-                        <input type="password" name="password1" required id="{{ form.password1.id_for_label }}"
-                               class="form-control border-start-0 border-end-0 ps-0 {% if form.password1.errors %}is-invalid{% endif %}" placeholder="Create a password">
-                        <button type="button" class="input-group-text bg-white border-start-0 text-ink-muted toggle-password" data-target="{{ form.password1.id_for_label }}" aria-label="Show password" aria-pressed="false">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                    {% if form.password1.errors %}
-                    <div class="text-danger small mt-1">
-                        {{ form.password1.errors.0 }}
-                    </div>
-                    {% else %}
-                    <div class="text-ink-muted small mt-1 auth-helper-text">
-                        Minimum 8 characters with letters and numbers.
-                    </div>
-                    {% endif %}
+                {% if form.email.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.email.errors.0 }}
                 </div>
-
-                <div class="mb-4">
-                    <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm password</label>
-                    <div class="input-group auth-input-group">
-                        <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-check2-circle"></i></span>
-                        <input type="password" name="password2" required id="{{ form.password2.id_for_label }}"
-                               class="form-control border-start-0 border-end-0 ps-0 {% if form.password2.errors %}is-invalid{% endif %}" placeholder="Confirm your password">
-                        <button type="button" class="input-group-text bg-white border-start-0 text-ink-muted toggle-password" data-target="{{ form.password2.id_for_label }}" aria-label="Show password" aria-pressed="false">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                    {% if form.password2.errors %}
-                    <div class="text-danger small mt-1">
-                        {{ form.password2.errors.0 }}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-                    Create my account <i class="bi bi-arrow-right ms-2"></i>
-                </button>
-            </form>
-
-            <div class="auth-footer">
-                <span>Already registered?</span>
-                <a href="{% url 'accounts:login' %}" class="fw-semibold text-cobalt ms-1">Sign in here</a>
+                {% endif %}
             </div>
+
+            <div class="mb-3">
+                <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-lock"></i></span>
+                    <input type="password" name="password1" required id="{{ form.password1.id_for_label }}"
+                           class="form-control border-start-0 border-end-0 ps-0 {% if form.password1.errors %}is-invalid{% endif %}">
+                    <button type="button" class="input-group-text bg-white border-start-0 text-ink-muted toggle-password" data-target="{{ form.password1.id_for_label }}" aria-label="Show password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                {% if form.password1.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.password1.errors.0 }}
+                </div>
+                {% else %}
+                <div class="text-ink-muted small mt-1" style="font-size:0.75rem;">
+                    Minimum 8 characters with letters and numbers.
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-check2-circle"></i></span>
+                    <input type="password" name="password2" required id="{{ form.password2.id_for_label }}"
+                           class="form-control border-start-0 border-end-0 ps-0 {% if form.password2.errors %}is-invalid{% endif %}">
+                    <button type="button" class="input-group-text bg-white border-start-0 text-ink-muted toggle-password" data-target="{{ form.password2.id_for_label }}" aria-label="Show password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                {% if form.password2.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.password2.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                Create free account <i class="bi bi-arrow-right ms-2"></i>
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            <span>Already have an account?</span>
+            <a href="{% url 'accounts:login' %}" class="fw-semibold text-cobalt ms-1">Sign in</a>
         </div>
+    </div>
     </div>
 </div>
 {% endblock %}
@@ -156,13 +134,11 @@
                 icon.classList.remove('bi-eye');
                 icon.classList.add('bi-eye-slash');
                 this.setAttribute('aria-label', 'Hide password');
-                this.setAttribute('aria-pressed', 'true');
             } else {
                 targetInput.type = 'password';
                 icon.classList.remove('bi-eye-slash');
                 icon.classList.add('bi-eye');
                 this.setAttribute('aria-label', 'Show password');
-                this.setAttribute('aria-pressed', 'false');
             }
         });
     });

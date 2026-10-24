@@ -27,14 +27,8 @@
             </ul>
 
             <div class="auth-metrics">
-                <div>
-                    <strong>68%</strong>
-                    <span>avg readiness</span>
-                </div>
-                <div>
-                    <strong>3-step</strong>
-                    <span>growth flow</span>
-                </div>
+                <div><strong>68%</strong><span>avg readiness</span></div>
+                <div><strong>3-step</strong><span>growth flow</span></div>
             </div>
         </aside>
 
@@ -43,12 +37,12 @@
                 <div class="auth-icon-badge">
                     <i class="bi bi-shield-lock-fill"></i>
                 </div>
-                <h3 class="fw-bold text-ink mb-1">Welcome back</h3>
+                <h1 class="h3 fw-bold text-ink mb-1">Welcome back</h1>
                 <p class="text-ink-muted small mb-0">Sign in to continue your career plan.</p>
             </div>
 
             {% if form.errors %}
-            <div class="alert alert-danger py-2 px-3 small mb-3">
+            <div class="alert alert-danger py-2 px-3 small mb-3" role="alert">
                 <i class="bi bi-exclamation-triangle-fill"></i>
                 <span>That username and password didn’t match. Try again.</span>
             </div>
@@ -56,6 +50,7 @@
 
             <form method="post" novalidate>
                 {% csrf_token %}
+                <input type="hidden" name="next" value="{{ next|default:'' }}">
                 <div class="mb-3">
                     <label for="id_username" class="form-label">Username</label>
                     <div class="input-group auth-input-group">

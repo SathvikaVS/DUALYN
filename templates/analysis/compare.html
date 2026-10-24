@@ -37,6 +37,16 @@
             </div>
             <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Compare</button></div>
         </form>
+        {% else %}
+        <div class="compare-empty-state">
+            <span class="compare-empty-icon"><i class="bi bi-graph-up-arrow"></i></span>
+            <div>
+                <h2 class="h5 mb-1">Make one more skills check to compare progress</h2>
+                <p class="text-ink-muted mb-3">Once you have two checks, we can show how your skills match has changed.</p>
+                <a href="{% url 'analysis:run' %}" class="btn btn-primary btn-sm">Check a role <i class="bi bi-arrow-right"></i></a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </section>
 {% else %}
