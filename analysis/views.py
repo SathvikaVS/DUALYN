@@ -45,15 +45,33 @@ def history_view(request):
 
 @login_required
 def run_analysis_view(request):
+    latest_resume = request.user.resumes.order_by('-uploaded_at').first()
+    detected_role = None
+    detected_headline = ""
+
+    if latest_resume:
+        detected_role = latest_resume.get_detected_role()
+        detected_headline = latest_resume.get_headline()
+
     if request.method == 'POST':
         form = RunAnalysisForm(request.POST)
         if form.is_valid():
-            analysis = run_analysis(request.user, form.cleaned_data['job_role'])
+            selected_role = form.cleaned_data['job_role']
+            analysis = run_analysis(request.user, selected_role)
             generate_recommendations(analysis)
             return redirect('analysis:report', pk=analysis.pk)
     else:
-        form = RunAnalysisForm()
-    return render(request, 'analysis/run.html', {'form': form})
+        initial = {}
+        if detected_role:
+            initial['job_role'] = detected_role
+        form = RunAnalysisForm(initial=initial)
+
+    return render(request, 'analysis/run.html', {
+        'form': form,
+        'detected_role': detected_role,
+        'detected_headline': detected_headline,
+        'latest_resume': latest_resume,
+    })
 
 @login_required
 def compare_view(request):

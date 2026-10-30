@@ -338,4 +338,120 @@ Project 1: BookNest Web Application
 
         # 7. Student profile view
         resp = client.get(reverse('students:profile'))
-        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.status_code, 200)
+
+
+class AutoDetectedSkillGapAnalysisTests(TestCase):
+    """
+    Test suite verifying the automatic detection of target job role
+    from resume headline, pre-selection in Skill Gap Analyzer,
+    manual role override, and gap analysis execution.
+    """
+    def setUp(self):
+        from jobs.services.role_profiles import sync_role_profiles_to_db
+        sync_role_profiles_to_db()
+
+        self.user = User.objects.create_user('madhavan', password='password123')
+        self.client = Client()
+        self.client.force_login(self.user)
+
+        self.java_role = JobRole.objects.get(title='Java Full Stack Developer')
+        self.python_role = JobRole.objects.get(title='Python Developer')
+
+    def test_run_analysis_automatically_detects_java_full_stack_role(self):
+        """When run_analysis is invoked without job_role, auto-detects from resume headline."""
+        resume_text = """
+MADHAVAN R
+JAVA FULLSTACK DEVELOPER
+madhavan@example.com | 9876543210
+TECHNICAL SKILLS
+Languages: Java, SQL, JavaScript
+Web: HTML, CSS, Spring Boot
+Tools: Git
+PROJECTS
+E-Commerce Application: Built full-stack platform using Java, Spring Boot, MySQL, HTML, CSS.
+        """
+        Resume.objects.create(student=self.user, extracted_text=resume_text)
+
+        # Calling run_analysis without specifying job_role
+        analysis = run_analysis(self.user)
+        self.assertEqual(analysis.job_role, self.java_role)
+        self.assertEqual(analysis.job_role.title, 'Java Full Stack Developer')
+
+        # Check that gaps were evaluated against Java Full Stack competencies
+        gap_skills = {g.skill.name for g in analysis.gaps.all()}
+        self.assertIn('Java', gap_skills)
+        self.assertIn('Spring Boot', gap_skills)
+        self.assertIn('SQL', gap_skills)
+
+        # Check Java is demonstrated/covered
+        java_gap = analysis.gaps.filter(skill__name='Java').first()
+        self.assertIsNotNone(java_gap)
+        self.assertIn(java_gap.status, ['demonstrated', 'covered', 'mentioned'])
+
+    def test_run_analysis_view_preselects_detected_role_in_form(self):
+        """GET /analysis/run/ pre-selects the auto-detected role from resume headline."""
+        resume_text = """
+MOONSHINE
+Aspiring Java Full Stack Developer
+moon@example.com
+TECHNICAL SKILLS: Java, Spring Boot, SQL, HTML, CSS, JavaScript, Git
+        """
+        Resume.objects.create(student=self.user, extracted_text=resume_text)
+
+        resp = self.client.get(reverse('analysis:run'))
+        self.assertEqual(resp.status_code, 200)
+
+        # Verify context variables
+        self.assertEqual(resp.context['detected_role'], self.java_role)
+        self.assertEqual(resp.context['detected_headline'], 'Aspiring Java Full Stack Developer')
+
+        # Verify form has detected role pre-selected
+        form = resp.context['form']
+        self.assertEqual(form.initial.get('job_role'), self.java_role)
+
+        # Verify rendered HTML contains the auto-detected notification
+        content = resp.content.decode('utf-8')
+        self.assertIn('Target Role Auto-Detected', content)
+        self.assertIn('Java Full Stack Developer', content)
+        self.assertIn('Aspiring Java Full Stack Developer', content)
+
+    def test_manual_role_selection_overrides_detected_role(self):
+        """User can keep manual selection and choose a different target role."""
+        resume_text = """
+NIKESH
+Aspiring Java Full Stack Developer
+TECHNICAL SKILLS: Java, Python, SQL, Git
+        """
+        Resume.objects.create(student=self.user, extracted_text=resume_text)
+
+        # User chooses Python Developer manually instead of detected Java Full Stack Developer
+        resp = self.client.post(reverse('analysis:run'), {
+            'job_role': self.python_role.pk
+        })
+        self.assertEqual(resp.status_code, 302)
+
+        # Analysis is performed based on the final selected role
+        analysis = self.user.analyses.order_by('-created_at').first()
+        self.assertIsNotNone(analysis)
+        self.assertEqual(analysis.job_role, self.python_role)
+        self.assertEqual(analysis.job_role.title, 'Python Developer')
+
+    def test_final_selected_role_is_used_when_auto_detected_role_kept(self):
+        """When user submits with auto-detected role, analysis runs on that role."""
+        resume_text = """
+ALEX
+Java Full Stack Developer
+TECHNICAL SKILLS: Java, Spring Boot, SQL, HTML, CSS, JavaScript
+        """
+        Resume.objects.create(student=self.user, extracted_text=resume_text)
+
+        # Submit with Java Full Stack Developer
+        resp = self.client.post(reverse('analysis:run'), {
+            'job_role': self.java_role.pk
+        })
+        self.assertEqual(resp.status_code, 302)
+
+        analysis = self.user.analyses.order_by('-created_at').first()
+        self.assertIsNotNone(analysis)
+        self.assertEqual(analysis.job_role, self.java_role)

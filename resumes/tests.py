@@ -237,4 +237,75 @@ class CompetencyExtractionTests(TestCase):
         for name in expected_skills:
             self.assertIn(name, evidence)
             self.assertTrue(bool(evidence[name]['sentence']))
-            self.assertIn(evidence[name]['section'], ['Technical Skills', 'Projects', 'Education', 'Certifications', 'Summary', 'General'])
+            self.assertIn(evidence[name]['section'], ['Technical Skills', 'Projects', 'Education', 'Certifications', 'Summary', 'General'])
+
+
+class HeadlineExtractionAndRoleDetectionTests(TestCase):
+    """
+    Test suite for headline extraction and role matching logic.
+    """
+    def setUp(self):
+        from jobs.services.role_profiles import sync_role_profiles_to_db
+        sync_role_profiles_to_db()
+
+    def test_extract_headline_explicit_label(self):
+        from jobs.services.role_matcher import extract_headline
+        text = "John Doe\nHeadline: Java Full Stack Developer\njohn@example.com"
+        self.assertEqual(extract_headline(text), "Java Full Stack Developer")
+
+    def test_extract_headline_second_line_title(self):
+        from jobs.services.role_matcher import extract_headline
+        text = "NIKESH\nAspiring Java Full Stack Developer\nTrichy, Tamil Nadu | 9361430470"
+        self.assertEqual(extract_headline(text), "Aspiring Java Full Stack Developer")
+
+    def test_extract_headline_uppercase_with_contact(self):
+        from jobs.services.role_matcher import extract_headline
+        text = "MADHAVAN R\n9087925714\nJAVA FULLSTACK DEVELOPER madhavan908792@gmail.com\nhttps://github.com"
+        self.assertEqual(extract_headline(text), "JAVA FULLSTACK DEVELOPER")
+
+    def test_match_java_full_stack_developer(self):
+        from jobs.services.role_matcher import match_role_from_text
+        role = match_role_from_text("Java Full Stack Developer")
+        self.assertIsNotNone(role)
+        self.assertEqual(role.title, "Java Full Stack Developer")
+
+        role2 = match_role_from_text("JAVA FULLSTACK DEVELOPER")
+        self.assertIsNotNone(role2)
+        self.assertEqual(role2.title, "Java Full Stack Developer")
+
+        role3 = match_role_from_text("Aspiring Java Full Stack Developer")
+        self.assertIsNotNone(role3)
+        self.assertEqual(role3.title, "Java Full Stack Developer")
+
+    def test_java_full_stack_not_confused_with_generic_full_stack(self):
+        """Ensures 'Java Full Stack Developer' prioritizes Java role over generic Full-Stack."""
+        from jobs.services.role_matcher import match_role_from_text
+        java_role = match_role_from_text("Java Full Stack Developer")
+        self.assertEqual(java_role.title, "Java Full Stack Developer")
+
+        generic_role = match_role_from_text("Full-Stack Developer")
+        self.assertEqual(generic_role.title, "Full-Stack Developer")
+
+    def test_match_django_and_python_roles(self):
+        from jobs.services.role_matcher import match_role_from_text
+        r1 = match_role_from_text("Aspiring Software Developer | Python & Django Developer")
+        self.assertEqual(r1.title, "Django Developer")
+
+        r2 = match_role_from_text("ASPIRING PYTHON / SOFTWARE DEVELOPER")
+        self.assertEqual(r2.title, "Python Developer")
+
+        r3 = match_role_from_text("Data Analyst")
+        self.assertEqual(r3.title, "Data Analyst")
+
+    def test_resume_model_helper_methods(self):
+        from resumes.models import Resume
+        from django.contrib.auth.models import User
+        user = User.objects.create_user('testuser', password='password123')
+        resume = Resume.objects.create(
+            student=user,
+            extracted_text="PRIYA\nAspiring Java Full Stack Developer\npriya@example.com"
+        )
+        detected_role = resume.get_detected_role()
+        self.assertIsNotNone(detected_role)
+        self.assertEqual(detected_role.title, "Java Full Stack Developer")
+        self.assertEqual(resume.get_headline(), "Aspiring Java Full Stack Developer")

@@ -77,6 +77,18 @@ def upload_resume_view(request):
             extracted = extract_text_from_resume(resume.file.path)
             if extracted:
                 resume.extracted_text = extracted
+
+                # Auto-detect target job role from resume headline
+                from jobs.services.role_matcher import detect_target_role_from_resume
+                from analysis.services.gap_engine import run_analysis
+                from recommendations.services.recommendation_engine import generate_recommendations
+
+                detected_role, headline = detect_target_role_from_resume(extracted)
+                if headline:
+                    resume.headline = headline
+                if detected_role:
+                    resume.detected_role = detected_role
+
                 matched_skills, skills_evidence = extract_resume_skills_with_evidence(extracted)
                 if matched_skills:
                     resume.ai_extracted_skills.set(matched_skills)
@@ -104,20 +116,42 @@ def upload_resume_view(request):
                     # 2. Sync profile details (Full name, College, Education) if unset
                     _sync_profile_from_resume(request.user, extracted)
 
-                    # 3. Recalculate any existing analyses to immediately update UI/UX benchmarks
-                    user_analyses = list(request.user.analyses.all())
-                    for a in user_analyses:
+                    # 3. If target role detected from headline, automatically analyze candidate skills against it
+                    if detected_role:
+                        target_analysis = request.user.analyses.filter(job_role=detected_role).first()
+                        if target_analysis:
+                            recalculate_analysis(target_analysis)
+                        else:
+                            new_analysis = run_analysis(request.user, detected_role)
+                            generate_recommendations(new_analysis)
+
+                    # 4. Recalculate any other existing analyses to update UI/UX benchmarks
+                    other_analyses = request.user.analyses.all()
+                    if detected_role:
+                        other_analyses = other_analyses.exclude(job_role=detected_role)
+                    for a in other_analyses:
                         recalculate_analysis(a)
 
                     skill_names_str = ', '.join(s.name for s in matched_skills)
+                    role_notification = ""
+                    if detected_role:
+                        role_notification = f" Automatically detected target role '{detected_role.title}' from headline (\"{headline}\") and analyzed skills against job requirements."
+
                     messages.success(
                         request,
                         f"Resume processed successfully! Detected {len(matched_skills)} competencies: "
-                        f"{skill_names_str}. "
+                        f"{skill_names_str}.{role_notification} "
                         f"Your profile and career readiness benchmarks have been automatically updated."
                     )
                 else:
                     resume.save()
+                    if detected_role:
+                        target_analysis = request.user.analyses.filter(job_role=detected_role).first()
+                        if target_analysis:
+                            recalculate_analysis(target_analysis)
+                        else:
+                            new_analysis = run_analysis(request.user, detected_role)
+                            generate_recommendations(new_analysis)
                     messages.success(request, "Resume uploaded and processed successfully.")
             else:
                 messages.warning(request, "Resume uploaded, but text extraction failed. You may need to re-upload a clearer file.")
@@ -134,14 +168,29 @@ def sync_resume_view(request, pk):
     and recalculates all active career readiness benchmarks.
     """
     sync_role_profiles_to_db()
-    resume = get_object_or_404(Resume, pk=pk, student=request.user)
     if resume.extracted_text:
+        from jobs.services.role_matcher import detect_target_role_from_resume
+        from analysis.services.gap_engine import run_analysis
+        from recommendations.services.recommendation_engine import generate_recommendations
+
+        detected_role, headline = detect_target_role_from_resume(resume.extracted_text)
+        if headline:
+            resume.headline = headline
+        if detected_role:
+            resume.detected_role = detected_role
+
         matched_skills, skills_evidence = extract_resume_skills_with_evidence(resume.extracted_text)
         if matched_skills:
             resume.ai_extracted_skills.set(matched_skills)
             resume.skills_evidence = skills_evidence
-            resume.save()
+        resume.save()
         _sync_profile_from_resume(request.user, resume.extracted_text)
+
+        if detected_role:
+            target_analysis = request.user.analyses.filter(job_role=detected_role).first()
+            if not target_analysis:
+                new_a = run_analysis(request.user, detected_role)
+                generate_recommendations(new_a)
 
     skills = resume.ai_extracted_skills.all()
     for s in skills:

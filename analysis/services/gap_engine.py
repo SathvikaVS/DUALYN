@@ -39,12 +39,29 @@ ATTAINMENT_MAP: Dict[str, float] = {
 }
 
 
-def run_analysis(student, job_role: JobRole) -> SkillAnalysis:
+def run_analysis(student, job_role: Optional[JobRole] = None) -> SkillAnalysis:
     """
     Executes a complete career benchmark diagnostic for a student against a target JobRole.
+    If job_role is not provided (None), automatically detects the target job role from
+    the headline of the student's latest uploaded resume.
     Analyzes multiple evidence sources: declared skills, database projects, resume text,
-    and student profile background.
+    and student profile background against the relevant job requirements.
     """
+    if job_role is None:
+        latest_resume = student.resumes.order_by('-uploaded_at').first()
+        if latest_resume and latest_resume.extracted_text:
+            from jobs.services.role_matcher import detect_target_role_from_resume
+            detected_role, _ = detect_target_role_from_resume(latest_resume)
+            if detected_role:
+                job_role = detected_role
+
+    if job_role is None:
+        job_role = JobRole.objects.first()
+        if not job_role:
+            from jobs.services.role_profiles import sync_role_profiles_to_db
+            sync_role_profiles_to_db()
+            job_role = JobRole.objects.first()
+
     analysis = SkillAnalysis(student=student, job_role=job_role)
     return _evaluate_and_save_analysis(analysis, student, job_role, is_new=True)
 

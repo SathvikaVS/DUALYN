@@ -25,17 +25,52 @@
             </div>
 
             <div class="card-body p-4">
+                {% if detected_role %}
+                <!-- Auto-Detected Target Role Banner -->
+                <div class="alert alert-primary p-3 mb-4 rounded-3 border-primary-subtle d-flex align-items-start gap-3" style="background: rgba(49, 85, 217, 0.08);">
+                    <div class="brand-icon-box bg-primary text-white flex-shrink-0" style="width:38px; height:38px; font-size:1.1rem; border-radius:8px;">
+                        <i class="bi bi-magic"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                            <span class="fw-bold text-ink">Target Role Auto-Detected</span>
+                            <span class="badge bg-primary text-white px-2 py-1" style="font-size:0.72rem;">
+                                <i class="bi bi-check-circle-fill me-1"></i> Auto-Selected
+                            </span>
+                        </div>
+                        <p class="small text-ink-secondary mb-1">
+                            Detected headline from your uploaded resume: <strong class="text-primary">&ldquo;{{ detected_headline|default:detected_role.title }}&rdquo;</strong>.
+                        </p>
+                        <p class="small text-ink-muted mb-0" style="font-size:0.8rem;">
+                            <i class="bi bi-info-circle text-cobalt me-1"></i>
+                            We have pre-selected <strong>{{ detected_role.title }}</strong> below. You can keep this role or manually pick any other target role before launching analysis.
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
                 <form method="post">
                     {% csrf_token %}
 
                     <div class="mb-4">
-                        <label for="{{ form.job_role.id_for_label }}" class="form-label fs-6 fw-bold">
-                            Select Target Job Role
-                        </label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="{{ form.job_role.id_for_label }}" class="form-label fs-6 fw-bold mb-0">
+                                Target Job Role
+                            </label>
+                            {% if detected_role %}
+                            <span class="badge bg-light text-primary border border-primary-subtle small" style="font-size:0.75rem;">
+                                <i class="bi bi-stars me-1"></i> Resume Matched: {{ detected_role.title }}
+                            </span>
+                            {% endif %}
+                        </div>
                         {{ form.job_role }}
                         <div class="form-text mt-2">
                             <i class="bi bi-info-circle text-cobalt me-1"></i>
+                            {% if detected_role %}
+                            Pre-selected from your resume headline. You may freely select a different role if you wish to analyze against other career requirements.
+                            {% else %}
                             Select the career discipline you want to evaluate your resume and skills against.
+                            {% endif %}
                         </div>
                     </div>
 
