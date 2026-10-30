@@ -29,6 +29,7 @@ urlpatterns = [
     path('skills/', include('skills.urls')),
     path('analysis/', include('analysis.urls')),
     path('accounts/', include('accounts.urls')),
+    path('feedback/', include('feedback.urls')),
 ]
 
 if settings.DEBUG:

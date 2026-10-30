@@ -3,16 +3,14 @@
 {% block title %}Dashboard — DUALYN{% endblock %}
 
 {% block content %}
-<section class="dashboard-heading">
+<header class="dashboard-heading">
     <div>
-        <span class="section-label"><i class="bi bi-sun"></i> Your career workspace</span>
+        <span class="section-label"><i class="bi bi-sun"></i> Your workspace</span>
         <h1>Welcome back, {{ display_name }}</h1>
-        <p>See where you are, then choose one clear next step.</p>
+        <p>A quick look at where you are and what to do next.</p>
     </div>
-    <a href="{% url 'analysis:run' %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> Check a role
-    </a>
-</section>
+    <a href="{% url 'analysis:run' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Check a role</a>
+</header>
 
 {% if latest %}
 <div class="row g-4 dashboard-overview">
@@ -24,86 +22,58 @@
                     <div class="radial-score-container dashboard-score-dial" role="img" aria-label="Skills match: {{ latest.readiness_score|floatformat:0 }} percent">
                         <svg viewBox="0 0 140 140" aria-hidden="true">
                             <circle cx="70" cy="70" r="54" class="radial-score-bg" />
-                            <circle cx="70" cy="70" r="54" class="radial-score-bar"
-                                    style="stroke-dasharray: 339.29; stroke-dashoffset: calc(339.29 - (339.29 * {{ latest.readiness_score|floatformat:0 }} / 100));" />
+                            <circle cx="70" cy="70" r="54" class="radial-score-bar" style="stroke-dasharray: 339.29; stroke-dashoffset: calc(339.29 - (339.29 * {{ latest.readiness_score|floatformat:0 }} / 100));" />
                         </svg>
-                        <div class="radial-score-text">
-                            <span class="radial-score-number">{{ latest.readiness_score|floatformat:0 }}%</span>
-                        </div>
+                        <div class="radial-score-text"><span class="radial-score-number">{{ latest.readiness_score|floatformat:0 }}%</span></div>
                     </div>
-                    <div>
-                        <strong>Skills match</strong>
-                        <span class="dashboard-updated">Updated {{ latest.created_at|date:"M d, Y" }}</span>
-                    </div>
+                    <div><strong>Skills match</strong><span class="dashboard-updated">{{ latest.created_at|date:"M d, Y" }}</span></div>
                 </div>
                 <div class="dashboard-skill-counts" aria-label="Skills summary">
                     <span><b class="text-success">{{ covered_count }}</b> Ready</span>
                     <span><b class="text-warning-emphasis">{{ improve_count }}</b> Practise</span>
                     <span><b class="text-danger">{{ missing_count }}</b> To learn</span>
                 </div>
-                <p class="dashboard-score-note">A guide to help you plan what to learn next—not a promise of a job.</p>
-                <a href="{% url 'analysis:report' latest.pk %}" class="btn btn-outline-primary w-100">
-                    View your full results <i class="bi bi-arrow-right ms-1"></i>
-                </a>
+                <p class="dashboard-score-note">A guide to help plan what to learn—not a prediction of a job offer.</p>
+                <a href="{% url 'analysis:report' latest.pk %}" class="btn btn-outline-primary w-100">View your results <i class="bi bi-arrow-right ms-1"></i></a>
             </div>
         </section>
     </aside>
 
     <section class="col-lg-8">
-        <div class="card dashboard-latest-card">
+        <div class="card dashboard-latest-card h-100">
             <div class="card-body">
                 <div class="dashboard-latest-heading">
                     <div>
                         <span class="dashboard-card-kicker"><i class="bi bi-briefcase"></i> Latest role check</span>
                         <h2>{{ latest.job_role.title }}</h2>
-                        <p>Here are a few skills to focus on for this role.</p>
+                        <p>Choose one skill to work on next.</p>
                     </div>
                     <a href="{% url 'analysis:run' %}" class="btn btn-outline-secondary">Check another role</a>
                 </div>
-
                 <div class="dashboard-focus-grid">
-                    <section class="dashboard-focus-panel">
-                        <div class="dashboard-panel-heading">
-                            <div>
-                                <h3>Skills to work on</h3>
-                                <p>Start with one skill at a time.</p>
-                            </div>
-                            <i class="bi bi-lightning-charge"></i>
-                        </div>
+                    <section>
+                        <div class="dashboard-panel-heading"><div><h3>Skills to work on</h3><p>Important skills for this role.</p></div><i class="bi bi-lightning-charge"></i></div>
                         <ul class="dashboard-simple-list">
                             {% for gap in high_priority %}
                             <li>
                                 <span>{{ gap.skill.name }}</span>
-                                <span class="badge badge-status-{{ gap.status }}">{{ gap.get_status_display }}</span>
+                                {% if gap.status == 'mentioned' %}<span class="badge badge-status-mentioned">Found in resume</span>
+                                {% elif gap.status == 'needs_improvement' %}<span class="badge badge-status-needs_improvement">Practise</span>
+                                {% elif gap.status == 'not_assessed' %}<span class="badge badge-status-not_assessed">Not checked</span>
+                                {% else %}<span class="badge badge-status-missing">To learn</span>{% endif %}
                             </li>
                             {% empty %}
-                            <li class="dashboard-list-empty">
-                                <i class="bi bi-check-circle-fill"></i>
-                                <span>No urgent gaps for this role. Nice work!</span>
-                            </li>
+                            <li class="dashboard-list-empty"><i class="bi bi-check-circle-fill"></i><span>No urgent gaps for this role. Nice work!</span></li>
                             {% endfor %}
                         </ul>
                     </section>
-
-                    <section class="dashboard-focus-panel dashboard-roadmap-panel">
-                        <div class="dashboard-panel-heading">
-                            <div>
-                                <h3>Your next steps</h3>
-                                <p>From your learning plan.</p>
-                            </div>
-                            <i class="bi bi-signpost"></i>
-                        </div>
+                    <section>
+                        <div class="dashboard-panel-heading"><div><h3>Your next steps</h3><p>Suggested in your learning plan.</p></div><i class="bi bi-signpost"></i></div>
                         <ol class="dashboard-roadmap-list">
                             {% for item in next_skills %}
-                            <li>
-                                <span class="dashboard-roadmap-number">{{ forloop.counter }}</span>
-                                <span><strong>{{ item.skill_gap.skill.name }}</strong><small>{{ item.get_phase_display }}</small></span>
-                            </li>
+                            <li><span class="dashboard-roadmap-number">{{ forloop.counter }}</span><span><strong>{{ item.skill_gap.skill.name }}</strong><small>{{ item.get_phase_display }}</small></span></li>
                             {% empty %}
-                            <li class="dashboard-list-empty">
-                                <i class="bi bi-info-circle"></i>
-                                <span>Your learning plan will appear here when it’s ready.</span>
-                            </li>
+                            <li class="dashboard-list-empty"><i class="bi bi-info-circle"></i><span>Your learning plan will appear here when it’s ready.</span></li>
                             {% endfor %}
                         </ol>
                     </section>
@@ -114,70 +84,46 @@
 </div>
 {% else %}
 <section class="card dashboard-welcome-card">
-    <div class="card-body">
-        <div class="dashboard-welcome-copy">
-            <span class="dashboard-card-kicker"><i class="bi bi-compass"></i> A simple place to start</span>
-            <h2>Find out what your next role needs.</h2>
-            <p>Choose a role to see which skills you already have and what you could learn next. Add your skills or resume whenever you’re ready.</p>
-            <a href="{% url 'analysis:run' %}" class="btn btn-primary">
-                Choose a role <i class="bi bi-arrow-right ms-1"></i>
-            </a>
-        </div>
-        <ol class="dashboard-onboarding-list">
-            <li><span>1</span><div><strong>Add your experience</strong><small>List your skills or upload a resume.</small></div></li>
-            <li><span>2</span><div><strong>Choose a role</strong><small>Pick a job you’d like to work toward.</small></div></li>
-            <li><span>3</span><div><strong>Get clear next steps</strong><small>See what to practise or learn next.</small></div></li>
-        </ol>
+    <div class="dashboard-welcome-copy">
+        <span class="dashboard-card-kicker"><i class="bi bi-compass"></i> Start here</span>
+        <h2>See what a role asks for.</h2>
+        <p>Choose a role to see the skills you already have and a few ideas for what to learn next. Add skills or a resume whenever you’re ready.</p>
+        <a href="{% url 'analysis:run' %}" class="btn btn-primary">Choose a role <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
+    <ol class="dashboard-onboarding-list">
+        <li><span>1</span><div><strong>Add your experience</strong><small>List skills or add a resume.</small></div></li>
+        <li><span>2</span><div><strong>Choose a role</strong><small>Pick a job you’re interested in.</small></div></li>
+        <li><span>3</span><div><strong>Take a next step</strong><small>See what to practise or learn.</small></div></li>
+    </ol>
 </section>
 {% endif %}
 
 <div class="row g-4 dashboard-supporting-row">
     <section class="col-lg-4">
         <div class="card h-100">
-            <div class="card-header-clean"><h2 class="h5 mb-0">Your profile</h2></div>
+            <div class="card-header-clean"><h2 class="h5 mb-0">Your experience</h2></div>
             <div class="card-body d-grid gap-2">
-                <a href="{% url 'skills:my_skills' %}" class="dashboard-action-link">
-                    <i class="bi bi-code-slash"></i><span><strong>My skills</strong><small>Add or update what you know.</small></span><i class="bi bi-arrow-right"></i>
-                </a>
-                <a href="{% url 'resumes:list' %}" class="dashboard-action-link">
-                    <i class="bi bi-file-earmark-text"></i><span><strong>My resumes</strong><small>Upload or review a resume.</small></span><i class="bi bi-arrow-right"></i>
-                </a>
-                <a href="{% url 'students:profile' %}" class="dashboard-action-link">
-                    <i class="bi bi-person"></i><span><strong>Personal details</strong><small>Keep your profile up to date.</small></span><i class="bi bi-arrow-right"></i>
-                </a>
-                {% if latest_resume %}
-                <p class="dashboard-resume-note mb-0">
-                    <i class="bi bi-file-earmark-check"></i>
-                    Resume skills found: {{ resume_skills_count }}
-                </p>
-                {% endif %}
+                <a href="{% url 'skills:my_skills' %}" class="dashboard-action-link"><i class="bi bi-code-slash"></i><span><strong>My skills</strong><small>Add or update your skills.</small></span><i class="bi bi-arrow-right"></i></a>
+                <a href="{% url 'resumes:list' %}" class="dashboard-action-link"><i class="bi bi-file-earmark-text"></i><span><strong>My resumes</strong><small>Review skills found in your resume.</small></span><i class="bi bi-arrow-right"></i></a>
+                {% if latest_resume %}<p class="dashboard-resume-note mb-0"><i class="bi bi-file-earmark-check"></i> Skills found in latest resume: {{ resume_skills_count }}</p>{% endif %}
+                <a href="{% url 'students:profile' %}" class="dashboard-action-link"><i class="bi bi-person"></i><span><strong>Personal details</strong><small>Update your profile.</small></span><i class="bi bi-arrow-right"></i></a>
             </div>
         </div>
     </section>
-
     <section class="col-lg-8">
         <div class="card h-100">
             <div class="card-header-clean">
-                <div>
-                    <h2 class="h5 mb-1">Recent role checks</h2>
-                    <p class="text-ink-muted small mb-0">Open a past result or pick up where you left off.</p>
-                </div>
+                <div><h2 class="h5 mb-1">Recent role checks</h2><p class="text-ink-muted small mb-0">Open a past result or pick up where you left off.</p></div>
                 <a href="{% url 'analysis:history' %}" class="btn btn-outline-secondary btn-sm">View all</a>
             </div>
             <div class="table-responsive">
                 <table class="table dualyn-table mb-0">
-                    <thead><tr><th>Role</th><th>Skills match</th><th>Date</th><th><span class="visually-hidden">Report</span></th></tr></thead>
+                    <thead><tr><th>Role</th><th>Skills match</th><th>Date</th><th><span class="visually-hidden">Result</span></th></tr></thead>
                     <tbody>
                         {% for analysis in recent %}
-                        <tr>
-                            <td class="fw-semibold">{{ analysis.job_role.title }}</td>
-                            <td>{{ analysis.readiness_score|floatformat:0 }}%</td>
-                            <td class="text-ink-muted small">{{ analysis.created_at|date:"M d, Y" }}</td>
-                            <td class="text-end"><a href="{% url 'analysis:report' analysis.pk %}" class="btn btn-outline-primary btn-sm">Open</a></td>
-                        </tr>
+                        <tr><td class="fw-semibold">{{ analysis.job_role.title }}</td><td>{{ analysis.readiness_score|floatformat:0 }}%</td><td class="text-ink-muted small">{{ analysis.created_at|date:"M d, Y" }}</td><td class="text-end"><a href="{% url 'analysis:report' analysis.pk %}" class="btn btn-outline-primary btn-sm">Open</a></td></tr>
                         {% empty %}
-                        <tr><td colspan="4" class="text-center text-ink-muted py-4">Your completed role checks will show up here.</td></tr>
+                        <tr><td colspan="4" class="text-center text-ink-muted py-4">Your completed checks will show up here.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

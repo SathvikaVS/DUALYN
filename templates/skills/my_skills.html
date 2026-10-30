@@ -1,89 +1,59 @@
 {% extends 'base.html' %}
 
-{% block title %}My Skills — DUALYN{% endblock %}
+{% block title %}My skills — DUALYN{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <span class="section-label">
-        <i class="bi bi-patch-check-fill"></i> Competency Catalog
-    </span>
-    <h1 class="h2 mb-1">My Skills Library</h1>
-    <p class="text-ink-muted mb-0">Declare your technical proficiencies and mastery levels to calibrate your career readiness calculations.</p>
-</div>
+<header class="page-heading">
+    <span class="section-label"><i class="bi bi-code-slash"></i> Your experience</span>
+    <h1>My skills</h1>
+    <p>Add skills you’ve used so your role checks can give you a more useful picture.</p>
+</header>
 
 <div class="row g-4">
-    <!-- Left Column: Add Skill Card -->
-    <div class="col-lg-5">
-        <div class="card shadow-sm border-1">
-            <div class="card-header-clean bg-white">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="brand-icon-box" style="width:28px; height:28px; font-size:0.85rem;">
-                        <i class="bi bi-plus-lg"></i>
-                    </span>
-                    <h5 class="mb-0 fw-bold">Declare a Skill</h5>
-                </div>
-            </div>
-            <div class="card-body p-4">
+    <section class="col-lg-4">
+        <div class="card skill-add-card">
+            <div class="card-body">
+                <span class="dashboard-card-kicker"><i class="bi bi-plus-circle"></i> Add a skill</span>
+                <p class="text-ink-muted small mt-2">Choose a skill and the level that best describes your experience.</p>
                 <form method="post">
                     {% csrf_token %}
+                    {% if form.non_field_errors %}<div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>{% endif %}
                     <div class="mb-3">
-                        <label for="{{ form.skill.id_for_label }}" class="form-label">
-                            Competency / Technology
-                        </label>
+                        <label for="{{ form.skill.id_for_label }}" class="form-label">Skill</label>
                         {{ form.skill }}
-                        <div class="form-text">Choose from our verified technology catalog.</div>
+                        {% for error in form.skill.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
-
                     <div class="mb-4">
-                        <label for="{{ form.level.id_for_label }}" class="form-label">
-                            Proficiency Level
-                        </label>
+                        <label for="{{ form.level.id_for_label }}" class="form-label">How comfortable are you?</label>
                         {{ form.level }}
-                        <div class="form-text">Self-assess your practical command.</div>
+                        {% for error in form.level.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
-
-                    <button type="submit" class="btn btn-primary w-100 py-2">
-                        <i class="bi bi-plus-circle me-1"></i> Add to My Skills
-                    </button>
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i> Add to my skills</button>
                 </form>
             </div>
         </div>
+        <aside class="page-tip mt-3">
+            <i class="bi bi-info-circle"></i>
+            <span>Your skills and skills found in your resume can both help with a role check.</span>
+        </aside>
+    </section>
 
-        <div class="p-3 mt-3 rounded-3" style="background: rgba(49, 85, 217, 0.05); border: 1px solid rgba(49, 85, 217, 0.15);">
-            <div class="d-flex align-items-start gap-2 small text-ink-secondary">
-                <i class="bi bi-info-circle-fill text-cobalt mt-1"></i>
-                <span>Skills declared here are combined with skills parsed from your uploaded resumes when generating diagnostic benchmarks.</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Right Column: Declared & Resume Skills -->
-    <div class="col-lg-7">
+    <section class="col-lg-8">
         {% if resume_skills %}
-        <!-- Resume Verified Competencies Card -->
-        <div class="card shadow-sm border-1 mb-4">
-            <div class="card-header-clean bg-white d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="brand-icon-box" style="width:28px; height:28px; font-size:0.85rem; background: rgba(16, 185, 129, 0.1); color: #10B981;">
-                        <i class="bi bi-file-earmark-check-fill"></i>
-                    </span>
-                    <div>
-                        <h6 class="mb-0 fw-bold">AI-Extracted from Resume</h6>
-                        <span class="text-ink-muted small" style="font-size:0.75rem;">Verified from {{ latest_resume.file.name|slice:":30" }}</span>
-                    </div>
+        <div class="card mb-4">
+            <div class="card-header-clean">
+                <div>
+                    <span class="dashboard-card-kicker"><i class="bi bi-file-earmark-check"></i> From your resume</span>
+                    <p class="text-ink-muted small mb-0 mt-1">{{ resume_skills|length }} skill{{ resume_skills|length|pluralize }} found in {{ latest_resume.file.name|slice:"-40:" }}</p>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-success-subtle text-success small">{{ resume_skills|length }} detected</span>
-                    <a href="{% url 'skills:sync_resume' %}" class="btn btn-sm btn-outline-success py-1 px-2" style="font-size:0.78rem;">
-                        <i class="bi bi-arrow-repeat me-1"></i> Sync All to Profile
-                    </a>
-                </div>
+                <a href="{% url 'skills:sync_resume' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-down-circle me-1"></i> Add missing skills to profile</a>
             </div>
-            <div class="card-body p-3">
-                <div class="d-flex flex-wrap gap-1">
-                    {% for s in resume_skills %}
+            <div class="card-body">
+                <div class="skill-chip-list">
+                    {% for skill in resume_skills %}
                     <span class="skill-chip">
-                        <i class="bi bi-check-circle-fill text-success small me-1"></i> {{ s.name }}
+                        <i class="bi bi-check-circle-fill text-success me-1"></i>{{ skill.name }}
+                        {% if skill.pk in declared_skill_ids %}<span class="skill-chip-note">In profile</span>{% endif %}
                     </span>
                     {% endfor %}
                 </div>
@@ -91,50 +61,30 @@
         </div>
         {% endif %}
 
-        <div class="card shadow-sm border-1">
-            <div class="card-header-clean bg-white">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="brand-icon-box" style="width:28px; height:28px; font-size:0.85rem;">
-                        <i class="bi bi-check-all"></i>
-                    </span>
-                    <h5 class="mb-0 fw-bold">Declared Competencies</h5>
-                </div>
-                <span class="badge bg-secondary-subtle text-secondary">{{ declared|length }} Declared</span>
+        <div class="card">
+            <div class="card-header-clean">
+                <div><h2 class="h5 mb-1">Your skill list</h2><p class="text-ink-muted small mb-0">You can update this list at any time.</p></div>
+                <span class="count-badge">{{ declared|length }} skill{{ declared|length|pluralize }}</span>
             </div>
-
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    {% for entry in declared %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center py-3">
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="badge-level p-2 rounded-circle d-flex align-items-center justify-content-center" style="width:32px; height:32px;">
-                                <i class="bi bi-code-square"></i>
-                            </span>
-                            <div>
-                                <span class="fw-bold text-ink d-block">{{ entry.skill.name }}</span>
-                                <span class="text-ink-muted small">Added {{ entry.added_at|date:"M d, Y" }}</span>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge badge-level">
-                                {{ entry.get_level_display }}
-                            </span>
-                            <a href="{% url 'skills:remove_skill' entry.pk %}" class="btn btn-outline-danger btn-sm p-1 px-2" title="Remove skill">
-                                <i class="bi bi-trash3"></i>
-                            </a>
-                        </div>
-                    </li>
-                    {% empty %}
-                    <li class="list-group-item text-center py-5 text-ink-muted">
-                        <i class="bi bi-patch-question fs-1 text-ink-light d-block mb-2"></i>
-                        <p class="mb-0 fw-medium">No skills declared yet.</p>
-                        <span class="small">Use the form on the left to add your competencies.</span>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
+            <ul class="list-group list-group-flush">
+                {% for entry in declared %}
+                <li class="list-group-item skill-list-item">
+                    <span class="skill-row-icon"><i class="bi bi-code-square"></i></span>
+                    <span class="skill-row-copy"><strong>{{ entry.skill.name }}</strong><small>Added {{ entry.added_at|date:"M d, Y" }}</small></span>
+                    <span class="badge badge-level">{{ entry.get_level_display }}</span>
+                    <a href="{% url 'skills:remove_skill' entry.pk %}" class="btn btn-sm btn-outline-danger skill-remove-button" aria-label="Remove {{ entry.skill.name }}" title="Remove skill"><i class="bi bi-trash3"></i></a>
+                </li>
+                {% empty %}
+                <li>
+                    <div class="empty-state">
+                        <span class="empty-state-icon"><i class="bi bi-code-slash"></i></span>
+                        <h3>Your skill list is empty.</h3>
+                        <p>Add a skill you’ve learned in class, at work, or through a project.</p>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
-    </div>
+    </section>
 </div>
 {% endblock %}
