@@ -36,10 +36,10 @@ class Student_Profile(models.Model):
         from django.core.exceptions import ValidationError
 
         if self.Status == 'Studying' and self.Year_of_Study is None:
-            raise ValidationError({'year_of_study': 'Please select your year of study.'})
+            raise ValidationError({'Year_of_Study': 'Please select your year of study.'})
 
         if self.Status == 'Working' and self.Years_of_Experience is None:
-            raise ValidationError({'years_of_experience': 'Please enter your years of experience.'})
+            raise ValidationError({'Years_of_Experience': 'Please enter your years of experience.'})
 
     def __str__(self):
         return self.Full_name or self.User.username

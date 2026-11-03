@@ -15,4 +15,4 @@ class StudentProfileForm(forms.ModelForm):
         for name, field in self.fields.items():
             existing = field.widget.attrs.get('class', '')
             css_class = 'form-select' if isinstance(field.widget, forms.Select) else 'form-control'
-            field.widget.attrs['class'] = (existing + ' ' + css_class).strip()
+            field.widget.attrs['class'] = (existing + ' ' + css_class).strip()
