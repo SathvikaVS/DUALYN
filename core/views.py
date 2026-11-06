@@ -34,8 +34,14 @@ def dashboard_view(request):
     }
     if latest:
         gaps = latest.gaps.select_related('skill')
+        matched_skills = gaps.filter(
+            status__in=['covered', 'demonstrated']
+        ).order_by('skill__name')
+        matched_count = matched_skills.count()
         context.update({
-            'covered_count': gaps.filter(status__in=['covered', 'demonstrated']).count(),
+            'matched_count': matched_count,
+            'matched_skills': matched_skills[:5],
+            'covered_count': matched_count,
             'improve_count': gaps.filter(status__in=['needs_improvement', 'mentioned']).count(),
             'missing_count': gaps.filter(status__in=['missing', 'not_assessed']).count(),
             'high_priority': gaps.filter(priority='high').exclude(status__in=['covered', 'demonstrated']),

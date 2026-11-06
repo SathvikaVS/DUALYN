@@ -52,6 +52,19 @@
                 </div>
                 <div class="dashboard-focus-grid">
                     <section>
+                        <div class="dashboard-panel-heading"><div><h3>Skills matched</h3><p>{{ matched_count }} ready for this role.</p></div><i class="bi bi-check-circle"></i></div>
+                        <ul class="dashboard-simple-list">
+                            {% for gap in matched_skills %}
+                            <li><span>{{ gap.skill.name }}</span><span class="badge badge-status-covered">Ready</span></li>
+                            {% empty %}
+                            <li class="dashboard-list-empty"><i class="bi bi-info-circle"></i><span>No skills are marked ready yet. Add experience or skills to improve your match.</span></li>
+                            {% endfor %}
+                        </ul>
+                        {% if matched_count > 5 %}
+                        <a href="{% url 'analysis:report' latest.pk %}" class="dashboard-more-link">See all {{ matched_count }} matched skills <i class="bi bi-arrow-right"></i></a>
+                        {% endif %}
+                    </section>
+                    <section>
                         <div class="dashboard-panel-heading"><div><h3>Skills to work on</h3><p>Important skills for this role.</p></div><i class="bi bi-lightning-charge"></i></div>
                         <ul class="dashboard-simple-list">
                             {% for gap in high_priority %}

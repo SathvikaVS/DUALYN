@@ -41,10 +41,12 @@
                 <p class="text-ink-muted small mb-0">Sign in to continue your career plan.</p>
             </div>
 
-            {% if form.errors %}
+            {% if form.non_field_errors %}
             <div class="alert alert-danger py-2 px-3 small mb-3" role="alert">
                 <i class="bi bi-exclamation-triangle-fill"></i>
-                <span>That username and password didn’t match. Try again.</span>
+                {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
             </div>
             {% endif %}
 
@@ -55,19 +57,25 @@
                     <label for="id_username" class="form-label">Username</label>
                     <div class="input-group auth-input-group">
                         <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-person"></i></span>
-                        <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username" class="form-control border-start-0 ps-0" placeholder="Your username">
+                        <input type="text" name="username" autofocus autocapitalize="none" autocomplete="username" maxlength="150" required id="id_username" value="{{ form.username.value|default:'' }}" class="form-control border-start-0 ps-0 {% if form.username.errors %}is-invalid{% endif %}" aria-invalid="{% if form.username.errors %}true{% else %}false{% endif %}" placeholder="Your username">
                     </div>
+                    {% for error in form.username.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
                 </div>
 
                 <div class="mb-4">
                     <label for="id_password" class="form-label">Password</label>
                     <div class="input-group auth-input-group">
                         <span class="input-group-text bg-white border-end-0 text-ink-muted"><i class="bi bi-key"></i></span>
-                        <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control border-start-0 border-end-0 ps-0" placeholder="Your password">
+                        <input type="password" name="password" autocomplete="current-password" required id="id_password" class="form-control border-start-0 border-end-0 ps-0 {% if form.password.errors %}is-invalid{% endif %}" aria-invalid="{% if form.password.errors %}true{% else %}false{% endif %}" placeholder="Your password">
                         <button type="button" class="input-group-text bg-white border-start-0 text-ink-muted toggle-password" data-target="id_password" aria-label="Show password" aria-pressed="false">
                             <i class="bi bi-eye"></i>
                         </button>
                     </div>
+                    {% for error in form.password.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                    {% endfor %}
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">

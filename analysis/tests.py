@@ -161,6 +161,47 @@ class AnalysisPermissionTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
 
+class DashboardMatchedSkillsTests(TestCase):
+    def test_dashboard_lists_the_same_ready_skills_as_the_report(self):
+        student = User.objects.create_user('dashboard-student', password='pass12345')
+        job = JobRole.objects.create(title='Dashboard Developer')
+        analysis = SkillAnalysis.objects.create(
+            student=student,
+            job_role=job,
+            readiness_score=50,
+        )
+        ready_skill = Skill.objects.create(name='Dashboard Python')
+        demonstrated_skill = Skill.objects.create(name='Dashboard SQL')
+        mentioned_skill = Skill.objects.create(name='Dashboard HTML')
+        missing_skill = Skill.objects.create(name='Dashboard CSS')
+        SkillGap.objects.create(
+            analysis=analysis, skill=ready_skill, status='covered', priority='low'
+        )
+        SkillGap.objects.create(
+            analysis=analysis, skill=demonstrated_skill, status='demonstrated', priority='low'
+        )
+        SkillGap.objects.create(
+            analysis=analysis, skill=mentioned_skill, status='mentioned', priority='medium'
+        )
+        SkillGap.objects.create(
+            analysis=analysis, skill=missing_skill, status='missing', priority='high'
+        )
+
+        client = Client()
+        client.force_login(student)
+        response = client.get(reverse('dashboard'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['matched_count'], 2)
+        self.assertEqual(
+            list(response.context['matched_skills'].values_list('skill__name', flat=True)),
+            ['Dashboard Python', 'Dashboard SQL'],
+        )
+        self.assertContains(response, 'Skills matched')
+        self.assertContains(response, 'Dashboard Python')
+        self.assertContains(response, 'Dashboard SQL')
+
+
 class DualynSkillGapEnhancementTests(TestCase):
     """
     Automated test suite verifying the improved skill gap analyzer logic
