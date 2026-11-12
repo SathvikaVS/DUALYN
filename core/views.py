@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from recommendations.models import RoadmapItem
+from analysis.services.freshness import evidence_changed_since
 
 
 def dashboard_view(request):
@@ -20,17 +21,13 @@ def dashboard_view(request):
     analyses = user.analyses.select_related('job_role')
     latest = analyses.first()
 
-    # If the latest analysis was generated before a resume upload or is stale, recalculate it in-place
-    if latest and latest_resume and (latest.created_at < latest_resume.uploaded_at or (latest.readiness_score == 0 and latest_resume.extracted_text)):
-        from analysis.services.gap_engine import recalculate_analysis
-        latest = recalculate_analysis(latest)
-
     context = {
         'display_name': display_name,
         'latest': latest,
         'recent': analyses[:5],
         'latest_resume': latest_resume,
         'resume_skills_count': latest_resume.ai_extracted_skills.count() if latest_resume else 0,
+        'latest_is_stale': bool(latest) and evidence_changed_since(latest),
     }
     if latest:
         gaps = latest.gaps.select_related('skill')

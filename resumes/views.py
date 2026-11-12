@@ -1,10 +1,10 @@
 import re
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from skills.models import StudentSkill
 from jobs.services.role_profiles import sync_role_profiles_to_db
-from analysis.services.gap_engine import recalculate_analysis
 from .forms import ResumeUploadForm
 from .models import Resume
 from .services.resume_parser import extract_text_from_resume
@@ -118,19 +118,8 @@ def upload_resume_view(request):
 
                     # 3. If target role detected from headline, automatically analyze candidate skills against it
                     if detected_role:
-                        target_analysis = request.user.analyses.filter(job_role=detected_role).first()
-                        if target_analysis:
-                            recalculate_analysis(target_analysis)
-                        else:
-                            new_analysis = run_analysis(request.user, detected_role)
-                            generate_recommendations(new_analysis)
-
-                    # 4. Recalculate any other existing analyses to update UI/UX benchmarks
-                    other_analyses = request.user.analyses.all()
-                    if detected_role:
-                        other_analyses = other_analyses.exclude(job_role=detected_role)
-                    for a in other_analyses:
-                        recalculate_analysis(a)
+                        new_analysis = run_analysis(request.user, detected_role)
+                        generate_recommendations(new_analysis)
 
                     skill_names_str = ', '.join(s.name for s in matched_skills)
                     role_notification = ""
@@ -146,12 +135,8 @@ def upload_resume_view(request):
                 else:
                     resume.save()
                     if detected_role:
-                        target_analysis = request.user.analyses.filter(job_role=detected_role).first()
-                        if target_analysis:
-                            recalculate_analysis(target_analysis)
-                        else:
-                            new_analysis = run_analysis(request.user, detected_role)
-                            generate_recommendations(new_analysis)
+                        new_analysis = run_analysis(request.user, detected_role)
+                        generate_recommendations(new_analysis)
                     messages.success(request, "Resume uploaded and processed successfully.")
             else:
                 messages.warning(request, "Resume uploaded, but text extraction failed. You may need to re-upload a clearer file.")
@@ -162,11 +147,9 @@ def upload_resume_view(request):
 
 
 @login_required
+@require_POST
 def sync_resume_view(request, pk):
-    """
-    Explicitly synchronizes a resume's verified competencies to the student's profile
-    and recalculates all active career readiness benchmarks.
-    """
+    resume = get_object_or_404(Resume, pk=pk, student=request.user)
     sync_role_profiles_to_db()
     if resume.extracted_text:
         from jobs.services.role_matcher import detect_target_role_from_resume
@@ -206,13 +189,10 @@ def sync_resume_view(request, pk):
     if 'Debugging' in matched_names and 'Testing' not in matched_names:
         StudentSkill.objects.filter(student=request.user, skill__name='Testing & Debugging').delete()
 
-    for a in request.user.analyses.all():
-        recalculate_analysis(a)
-
     messages.success(
         request,
         f"Synchronized {skills.count()} competencies from '{resume.file.name.split('/')[-1]}' "
-        f"into your profile. Active benchmark diagnostics refreshed."
+        f"into your profile. Run a new check to see how they change your match."
     )
     return redirect('resumes:list')
 

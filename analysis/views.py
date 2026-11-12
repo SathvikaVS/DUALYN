@@ -1,21 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from django.contrib import messages
 from .forms import RunAnalysisForm
 from .models import SkillAnalysis
 from .services.gap_engine import run_analysis
 from recommendations.services.recommendation_engine import generate_recommendations
 from .services.progress import compare_analyses
+from .services.freshness import evidence_changed_since
 
 
 @login_required
 def report_view(request, pk):
     analysis = get_object_or_404(SkillAnalysis, pk=pk, student=request.user)
-    latest_resume = request.user.resumes.order_by('-uploaded_at').first()
-
-    # If the analysis was created before the resume was uploaded, or is stale, recalculate it in-place
-    if latest_resume and (analysis.created_at < latest_resume.uploaded_at or (analysis.readiness_score == 0 and latest_resume.extracted_text)):
-        from .services.gap_engine import recalculate_analysis
-        analysis = recalculate_analysis(analysis)
 
     # Ensure roadmap exists for this analysis
     if not hasattr(analysis, 'roadmap') or not analysis.roadmap:
@@ -34,7 +31,18 @@ def report_view(request, pk):
         'gaps': gaps,
         'previous': previous,
         'progress': progress,
+        'is_stale': evidence_changed_since(analysis),
     })
+
+
+@login_required
+@require_POST
+def refresh_analysis_view(request, pk):
+    analysis = get_object_or_404(SkillAnalysis, pk=pk, student=request.user)
+    new = run_analysis(request.user, analysis.job_role)
+    generate_recommendations(new)
+    messages.success(request, f"New check created for '{analysis.job_role.title}' with your latest information.")
+    return redirect('analysis:report', pk=new.pk)
 
 
 @login_required

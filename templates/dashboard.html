@@ -12,6 +12,19 @@
     <a href="{% url 'analysis:run' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Check a role</a>
 </header>
 
+{% if latest_is_stale and latest %}
+<div class="alert alert-info d-flex align-items-center justify-content-between mb-4" role="alert">
+    <div>
+        <i class="bi bi-info-circle me-2"></i>
+        <span>You've added new information since this check</span>
+    </div>
+    <form method="post" action="{% url 'analysis:refresh' latest.pk %}" class="d-inline mb-0">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-primary">Check again with latest info</button>
+    </form>
+</div>
+{% endif %}
+
 {% if latest %}
 <div class="row g-4 dashboard-overview">
     <aside class="col-lg-4">

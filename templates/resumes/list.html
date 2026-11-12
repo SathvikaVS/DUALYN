@@ -95,10 +95,12 @@
                             <i class="bi bi-check-circle-fill me-1"></i> Profile & Diagnostics Connected
                         </span>
                         <div class="d-flex gap-2">
-                            <a href="{% url 'resumes:sync' resume.pk %}" class="btn btn-sm btn-outline-primary"
-                                title="Re-sync competencies with active role benchmarks">
-                                <i class="bi bi-arrow-repeat me-1"></i> Sync Benchmarks
-                            </a>
+                            <form method="post" action="{% url 'resumes:sync' resume.pk %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-primary" title="Re-sync competencies with active role benchmarks">
+                                    <i class="bi bi-arrow-repeat me-1"></i> Sync Benchmarks
+                                </button>
+                            </form>
                             <a href="{% url 'dashboard' %}" class="btn btn-sm btn-light border text-ink-secondary">
                                 <i class="bi bi-speedometer2 me-1"></i> Dashboard
                             </a>

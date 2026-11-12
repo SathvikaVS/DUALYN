@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from analysis.services.gap_engine import recalculate_analysis
 from .forms import StudentSkillForm
 from .models import StudentSkill
 
@@ -15,11 +14,7 @@ def my_skills_view(request):
             skill_entry.student = request.user
             skill_entry.save()
 
-            # Keep active benchmark diagnostics in sync
-            for a in request.user.analyses.all():
-                recalculate_analysis(a)
-
-            messages.success(request, f"Added '{skill_entry.skill.name}' to your declared competencies.")
+            messages.success(request, f"Added '{skill_entry.skill.name}' to your declared competencies. Run a new check to see how it changes your match.")
             return redirect('skills:my_skills')
     else:
         form = StudentSkillForm()
@@ -59,13 +54,10 @@ def sync_all_resume_skills_view(request):
         if created:
             synced_count += 1
 
-    for a in request.user.analyses.all():
-        recalculate_analysis(a)
-
     messages.success(
         request,
         f"Synchronized {latest_resume.ai_extracted_skills.count()} competencies from your resume into your profile. "
-        f"Readiness diagnostics updated."
+        f"Run a new check to see how it changes your match."
     )
     return redirect('skills:my_skills')
 
@@ -76,8 +68,5 @@ def remove_skill_view(request, pk):
     skill_name = entry.skill.name
     entry.delete()
 
-    for a in request.user.analyses.all():
-        recalculate_analysis(a)
-
-    messages.success(request, f"Removed '{skill_name}' from declared competencies.")
+    messages.success(request, f"Removed '{skill_name}' from declared competencies. Run a new check to see how it changes your match.")
     return redirect('skills:my_skills')
