@@ -9,7 +9,10 @@
         <h1>Welcome back, {{ display_name }}</h1>
         <p>A quick look at where you are and what to do next.</p>
     </div>
-    <a href="{% url 'analysis:run' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Check a role</a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'analysis:best_fit' %}" class="btn btn-outline-primary"><i class="bi bi-stars me-1"></i> Best-fit roles</a>
+        <a href="{% url 'analysis:run' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Check a role</a>
+    </div>
 </header>
 
 {% if latest_is_stale and latest %}

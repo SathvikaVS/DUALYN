@@ -8,6 +8,7 @@ from .services.gap_engine import run_analysis
 from recommendations.services.recommendation_engine import generate_recommendations
 from .services.progress import compare_analyses
 from .services.freshness import evidence_changed_since
+from .services.best_fit import rank_roles_for
 
 
 @login_required
@@ -43,6 +44,14 @@ def refresh_analysis_view(request, pk):
     generate_recommendations(new)
     messages.success(request, f"New check created for '{analysis.job_role.title}' with your latest information.")
     return redirect('analysis:report', pk=new.pk)
+
+
+@login_required
+def best_fit_view(request):
+    ranked_roles = rank_roles_for(request.user)
+    return render(request, 'analysis/best_fit.html', {
+        'ranked_roles': ranked_roles,
+    })
 
 
 @login_required

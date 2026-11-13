@@ -80,7 +80,7 @@ class SnapshotImmutabilityTests(TestCase):
     def test_removing_skill_does_not_change_existing_analysis(self):
         entry = StudentSkill.objects.get(student=self.user, skill=self.python)
         url = reverse('skills:remove_skill', kwargs={'pk': entry.pk})
-        response = self.client.get(url)
+        response = self.client.post(url)
         self.assertEqual(response.status_code, 302)
         self.assertFalse(StudentSkill.objects.filter(student=self.user, skill=self.python).exists())
         self._assert_analysis_unchanged()

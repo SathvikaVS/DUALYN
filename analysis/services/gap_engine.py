@@ -86,18 +86,11 @@ def recalculate_analysis(analysis: SkillAnalysis) -> SkillAnalysis:
     return updated
 
 
-def _evaluate_and_save_analysis(analysis: SkillAnalysis, student: Any, job_role: JobRole, is_new: bool = False) -> SkillAnalysis:
+def gather_student_evidence(student: Any) -> Dict[str, Any]:
     """
-    Shared evaluation core that computes evidence across declared skills, projects,
-    and resumes, populating SkillGap entries and computing transparent readiness scores.
+    Gathers student evidence across declared skills, project portfolio, and uploaded resume.
+    Returns a dictionary of gathered evidence structures that can be reused across multiple role evaluations.
     """
-    # Ensure role competencies are populated
-    from jobs.services.role_profiles import sync_role_profiles_to_db
-    job_skills = list(job_role.job_skills.select_related('skill').all())
-    if not job_skills:
-        sync_role_profiles_to_db()
-        job_skills = list(job_role.job_skills.select_related('skill').all())
-
     # 1. Gather student declared skills
     declared_by_canonical: Dict[str, StudentSkill] = {}
     for s in student.declared_skills.select_related('skill').all():
@@ -142,107 +135,184 @@ def _evaluate_and_save_analysis(analysis: SkillAnalysis, student: Any, job_role:
             "competency matching."
         )
 
-    # Create or update SkillAnalysis record
+    has_resume_text = bool(latest_resume and latest_resume.extracted_text and latest_resume.extracted_text.strip())
+
+    return {
+        'declared_by_canonical': declared_by_canonical,
+        'project_skills_by_canonical': project_skills_by_canonical,
+        'latest_resume': latest_resume,
+        'has_warning': has_warning,
+        'warning_message': warning_message,
+        'resume_detected_skills': resume_detected_skills,
+        'ai_resume_skill_ids': ai_resume_skill_ids,
+        'has_resume_text': has_resume_text,
+    }
+
+
+def evaluate_role_readiness(
+    student: Any,
+    job_role: JobRole,
+    student_evidence: Optional[Dict[str, Any]] = None,
+    job_skills: Optional[List[JobSkill]] = None,
+) -> Dict[str, Any]:
+    """
+    Computes evidence gathering, status, attainment, and weighted readiness score
+    for a student against a target JobRole without persisting any SkillAnalysis or SkillGap rows.
+    """
+    if student_evidence is None:
+        student_evidence = gather_student_evidence(student)
+
+    if job_skills is None:
+        from jobs.services.role_profiles import sync_role_profiles_to_db
+        job_skills = list(job_role.job_skills.select_related('skill').all())
+        if not job_skills:
+            sync_role_profiles_to_db()
+            job_skills = list(job_role.job_skills.select_related('skill').all())
+
+    declared_by_canonical = student_evidence['declared_by_canonical']
+    project_skills_by_canonical = student_evidence['project_skills_by_canonical']
+    resume_detected_skills = student_evidence['resume_detected_skills']
+    ai_resume_skill_ids = student_evidence['ai_resume_skill_ids']
+    has_resume_text = student_evidence['has_resume_text']
+    has_warning = student_evidence['has_warning']
+    warning_message = student_evidence['warning_message']
+
+    weighted_sum = 0.0
+    total_weight = 0
+    status_counts = {
+        'demonstrated': 0,
+        'needs_improvement': 0,
+        'mentioned': 0,
+        'missing': 0,
+        'not_assessed': 0,
+    }
+    core_covered = 0
+    total_core = 0
+    opt_covered = 0
+    total_opt = 0
+    gaps_data = []
+
+    for job_skill in job_skills:
+        skill = job_skill.skill
+        evidence = _gather_competency_evidence(
+            skill=skill,
+            declared_map=declared_by_canonical,
+            project_skills_map=project_skills_by_canonical,
+            resume_skills_map=resume_detected_skills,
+            ai_resume_skill_ids=ai_resume_skill_ids,
+            has_resume_text=has_resume_text,
+            student=student
+        )
+
+        status, attainment = _determine_competency_status(
+            evidence=evidence,
+            required_level=job_skill.required_level or 'Intermediate',
+            is_fundamental=job_skill.is_fundamental,
+            has_resume_text=has_resume_text
+        )
+
+        priority = _determine_priority(
+            importance_weight=job_skill.importance_weight,
+            is_fundamental=job_skill.is_fundamental,
+            status=status
+        )
+
+        reasoning = _build_reasoning(skill, evidence, job_skill, status)
+        gap_explanation = _build_gap_explanation(skill, status, job_skill)
+        recommended_step = _build_recommended_step(skill, status, job_skill)
+
+        gaps_data.append({
+            'skill': skill,
+            'status': status,
+            'priority': priority,
+            'reasoning': reasoning,
+            'evidence_sources': evidence,
+            'required_level': job_skill.required_level or 'Intermediate',
+            'gap_explanation': gap_explanation,
+            'recommended_step': recommended_step,
+            'importance_weight': job_skill.importance_weight,
+            'is_fundamental': job_skill.is_fundamental,
+            'attainment': attainment,
+        })
+
+        weight = job_skill.importance_weight
+        weighted_sum += attainment * weight
+        total_weight += weight
+
+        status_counts[status] = status_counts.get(status, 0) + 1
+        if job_skill.is_fundamental:
+            total_core += 1
+            if status in ('demonstrated', 'covered'):
+                core_covered += 1
+        else:
+            total_opt += 1
+            if status in ('demonstrated', 'covered'):
+                opt_covered += 1
+
+    readiness_score = round((weighted_sum / total_weight) * 100, 1) if total_weight else 0.0
+
+    scoring_breakdown = {
+        'formula': 'Readiness Score = (Sum of [Importance Weight × Attainment]) / (Sum of Applicable Weights) × 100',
+        'total_weight': total_weight,
+        'attained_weight': round(weighted_sum, 2),
+        'readiness_percentage': readiness_score,
+        'status_counts': status_counts,
+        'total_competencies': len(job_skills),
+        'demonstrated_count': status_counts.get('demonstrated', 0) + status_counts.get('covered', 0),
+        'needs_improvement_count': status_counts.get('needs_improvement', 0),
+        'mentioned_count': status_counts.get('mentioned', 0),
+        'missing_count': status_counts.get('missing', 0),
+        'not_assessed_count': status_counts.get('not_assessed', 0),
+        'core_coverage': f"{core_covered}/{total_core} fundamental skills demonstrated",
+        'optional_coverage': f"{opt_covered}/{total_opt} specialized skills demonstrated",
+    }
+
+    covered_count = status_counts.get('demonstrated', 0) + status_counts.get('covered', 0)
+    missing_count = status_counts.get('missing', 0)
+
+    return {
+        'role': job_role,
+        'readiness_score': readiness_score,
+        'scoring_breakdown': scoring_breakdown,
+        'has_warning': has_warning,
+        'warning_message': warning_message,
+        'gaps_data': gaps_data,
+        'covered_count': covered_count,
+        'missing_count': missing_count,
+        'status_counts': status_counts,
+    }
+
+
+def _evaluate_and_save_analysis(analysis: SkillAnalysis, student: Any, job_role: JobRole, is_new: bool = False) -> SkillAnalysis:
+    """
+    Shared evaluation core that computes evidence across declared skills, projects,
+    and resumes, populating SkillGap entries and computing transparent readiness scores.
+    """
+    result = evaluate_role_readiness(student, job_role)
+
     with transaction.atomic():
-        analysis.has_warning = has_warning
-        analysis.warning_message = warning_message
+        analysis.has_warning = result['has_warning']
+        analysis.warning_message = result['warning_message']
+        analysis.readiness_score = result['readiness_score']
+        analysis.scoring_breakdown = result['scoring_breakdown']
         if is_new:
             analysis.save()
         else:
             analysis.gaps.all().delete()
+            analysis.save()
 
-        weighted_sum = 0.0
-        total_weight = 0
-        status_counts = {
-            'demonstrated': 0,
-            'needs_improvement': 0,
-            'mentioned': 0,
-            'missing': 0,
-            'not_assessed': 0,
-        }
-        core_covered = 0
-        total_core = 0
-        opt_covered = 0
-        total_opt = 0
-
-        # Assess each competency defined for this target role
-        for job_skill in job_skills:
-            skill = job_skill.skill
-            evidence = _gather_competency_evidence(
-                skill=skill,
-                declared_map=declared_by_canonical,
-                project_skills_map=project_skills_by_canonical,
-                resume_skills_map=resume_detected_skills,
-                ai_resume_skill_ids=ai_resume_skill_ids,
-                has_resume_text=bool(latest_resume and latest_resume.extracted_text and latest_resume.extracted_text.strip()),
-                student=student
-            )
-
-            status, attainment = _determine_competency_status(
-                evidence=evidence,
-                required_level=job_skill.required_level or 'Intermediate',
-                is_fundamental=job_skill.is_fundamental,
-                has_resume_text=bool(latest_resume and latest_resume.extracted_text and latest_resume.extracted_text.strip())
-            )
-
-            priority = _determine_priority(
-                importance_weight=job_skill.importance_weight,
-                is_fundamental=job_skill.is_fundamental,
-                status=status
-            )
-
-            reasoning = _build_reasoning(skill, evidence, job_skill, status)
-            gap_explanation = _build_gap_explanation(skill, status, job_skill)
-            recommended_step = _build_recommended_step(skill, status, job_skill)
-
+        for g in result['gaps_data']:
             SkillGap.objects.create(
                 analysis=analysis,
-                skill=skill,
-                status=status,
-                priority=priority,
-                reasoning=reasoning,
-                evidence_sources=evidence,
-                required_level=job_skill.required_level or 'Intermediate',
-                gap_explanation=gap_explanation,
-                recommended_step=recommended_step,
+                skill=g['skill'],
+                status=g['status'],
+                priority=g['priority'],
+                reasoning=g['reasoning'],
+                evidence_sources=g['evidence_sources'],
+                required_level=g['required_level'],
+                gap_explanation=g['gap_explanation'],
+                recommended_step=g['recommended_step'],
             )
-
-            weight = job_skill.importance_weight
-            weighted_sum += attainment * weight
-            total_weight += weight
-
-            # Aggregate statistics
-            status_counts[status] = status_counts.get(status, 0) + 1
-            if job_skill.is_fundamental:
-                total_core += 1
-                if status in ('demonstrated', 'covered'):
-                    core_covered += 1
-            else:
-                total_opt += 1
-                if status in ('demonstrated', 'covered'):
-                    opt_covered += 1
-
-        # Calculate final normalized percentage (0 to 100)
-        readiness_score = round((weighted_sum / total_weight) * 100, 1) if total_weight else 0.0
-
-        # Store transparent scoring breakdown
-        analysis.readiness_score = readiness_score
-        analysis.scoring_breakdown = {
-            'formula': 'Readiness Score = (Sum of [Importance Weight × Attainment]) / (Sum of Applicable Weights) × 100',
-            'total_weight': total_weight,
-            'attained_weight': round(weighted_sum, 2),
-            'readiness_percentage': readiness_score,
-            'status_counts': status_counts,
-            'total_competencies': len(job_skills),
-            'demonstrated_count': status_counts.get('demonstrated', 0) + status_counts.get('covered', 0),
-            'needs_improvement_count': status_counts.get('needs_improvement', 0),
-            'mentioned_count': status_counts.get('mentioned', 0),
-            'missing_count': status_counts.get('missing', 0),
-            'not_assessed_count': status_counts.get('not_assessed', 0),
-            'core_coverage': f"{core_covered}/{total_core} fundamental skills demonstrated",
-            'optional_coverage': f"{opt_covered}/{total_opt} specialized skills demonstrated",
-        }
-        analysis.save()
 
     return analysis
 

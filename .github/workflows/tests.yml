@@ -1,0 +1,55 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MYSQL_DATABASE: dualyn_test
+          MYSQL_ROOT_PASSWORD: rootpassword
+        ports:
+          - 3306:3306
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    env:
+      DB_NAME: dualyn_test
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DJANGO_SECRET_KEY: ci-only-secret
+      DJANGO_DEBUG: 'False'
+      GEMINI_API_KEY: ''
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libmariadb-dev pkg-config
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run test suite
+        run: |
+          python manage.py test
+

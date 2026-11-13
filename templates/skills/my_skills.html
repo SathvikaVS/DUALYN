@@ -46,7 +46,10 @@
                     <span class="dashboard-card-kicker"><i class="bi bi-file-earmark-check"></i> From your resume</span>
                     <p class="text-ink-muted small mb-0 mt-1">{{ resume_skills|length }} skill{{ resume_skills|length|pluralize }} found in {{ latest_resume.file.name|slice:"-40:" }}</p>
                 </div>
-                <a href="{% url 'skills:sync_resume' %}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-down-circle me-1"></i> Add missing skills to profile</a>
+                <form method="post" action="{% url 'skills:sync_resume' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-down-circle me-1"></i> Add missing skills to profile</button>
+                </form>
             </div>
             <div class="card-body">
                 <div class="skill-chip-list">
@@ -72,7 +75,10 @@
                     <span class="skill-row-icon"><i class="bi bi-code-square"></i></span>
                     <span class="skill-row-copy"><strong>{{ entry.skill.name }}</strong><small>Added {{ entry.added_at|date:"M d, Y" }}</small></span>
                     <span class="badge badge-level">{{ entry.get_level_display }}</span>
-                    <a href="{% url 'skills:remove_skill' entry.pk %}" class="btn btn-sm btn-outline-danger skill-remove-button" aria-label="Remove {{ entry.skill.name }}" title="Remove skill"><i class="bi bi-trash3"></i></a>
+                    <form method="post" action="{% url 'skills:remove_skill' entry.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger skill-remove-button" aria-label="Remove {{ entry.skill.name }}" title="Remove skill"><i class="bi bi-trash3"></i></button>
+                    </form>
                 </li>
                 {% empty %}
                 <li>

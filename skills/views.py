@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .forms import StudentSkillForm
 from .models import StudentSkill
@@ -34,6 +35,7 @@ def my_skills_view(request):
 
 
 @login_required
+@require_POST
 def sync_all_resume_skills_view(request):
     """
     Imports all AI-extracted competencies from the student's latest uploaded resume
@@ -63,6 +65,7 @@ def sync_all_resume_skills_view(request):
 
 
 @login_required
+@require_POST
 def remove_skill_view(request, pk):
     entry = get_object_or_404(StudentSkill, pk=pk, student=request.user)
     skill_name = entry.skill.name
