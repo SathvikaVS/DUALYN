@@ -77,6 +77,35 @@
 </aside>
 {% endif %}
 
+<section id="simulator-panel" class="card simulator-card mb-4 d-none" aria-live="polite">
+    <div class="card-body">
+        <form id="simulator-csrf-form" class="d-none">{% csrf_token %}</form>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+                <span class="section-label"><i class="bi bi-magic"></i> What if I learn this?</span>
+                <h2 class="h5 fw-bold mb-1">Score Simulator</h2>
+                <p class="text-ink-muted small mb-0">Tick any missing or in-progress skill below to see how mastering it would boost your match score.</p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-center px-3 py-2 bg-surface-muted rounded border">
+                    <span class="small text-ink-muted d-block">Current</span>
+                    <strong class="h5 mb-0 text-ink" id="simulator-current-score">{{ analysis.readiness_score|floatformat:0 }}%</strong>
+                </div>
+                <i class="bi bi-arrow-right text-ink-muted fs-4"></i>
+                <div class="text-center px-3 py-2 bg-primary-subtle rounded border border-primary-subtle">
+                    <span class="small text-primary d-block fw-semibold">Projected</span>
+                    <strong class="h5 mb-0 text-primary" id="simulator-projected-score">{{ analysis.readiness_score|floatformat:0 }}%</strong>
+                </div>
+                <div class="text-center px-3 py-2 bg-success-subtle rounded border border-success-subtle" id="simulator-gain-box">
+                    <span class="small text-success d-block fw-semibold">Gain</span>
+                    <strong class="h5 mb-0 text-success" id="simulator-gain-value">+0%</strong>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="simulator-reset-btn" style="display: none;">Reset</button>
+            </div>
+        </div>
+    </div>
+</section>
+
 <section class="report-section mb-5" aria-labelledby="skills-breakdown-title">
     <header class="report-section-heading">
         <div>
@@ -140,6 +169,17 @@
                     {% endwith %}
                     {% if gap.priority == 'high' and gap.status != 'demonstrated' and gap.status != 'covered' %}
                     <span class="skill-focus-label"><i class="bi bi-bookmark-star"></i> Good place to start</span>
+                    {% endif %}
+
+                    {% if gap.status != 'demonstrated' and gap.status != 'covered' %}
+                    <div class="simulator-checkbox-wrapper d-none mt-3 pt-2 border-top">
+                        <div class="form-check d-flex align-items-center gap-2 mb-0">
+                            <input class="form-check-input simulator-skill-checkbox m-0" type="checkbox" value="{{ gap.skill.id }}" id="simulate-skill-{{ gap.skill.id }}">
+                            <label class="form-check-label small fw-semibold text-primary" for="simulate-skill-{{ gap.skill.id }}" style="cursor: pointer;">
+                                <i class="bi bi-magic me-1"></i> What if I learn this?
+                            </label>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
             </article>
@@ -211,6 +251,85 @@
                 });
             });
         });
+    }());
+
+    (function () {
+        const simulatorPanel = document.getElementById('simulator-panel');
+        const checkboxWrappers = document.querySelectorAll('.simulator-checkbox-wrapper');
+        const checkboxes = document.querySelectorAll('.simulator-skill-checkbox');
+        const projectedEl = document.getElementById('simulator-projected-score');
+        const gainEl = document.getElementById('simulator-gain-value');
+        const resetBtn = document.getElementById('simulator-reset-btn');
+
+        if (!simulatorPanel || checkboxes.length === 0) {
+            return;
+        }
+
+        // JavaScript is active: reveal the simulator UI and checkboxes
+        simulatorPanel.classList.remove('d-none');
+        checkboxWrappers.forEach(function (wrapper) {
+            wrapper.classList.remove('d-none');
+        });
+
+        const simulateUrl = "{% url 'analysis:simulate' analysis.pk %}";
+
+        function getCsrfToken() {
+            const input = document.querySelector('#simulator-csrf-form [name=csrfmiddlewaretoken]') || document.querySelector('[name=csrfmiddlewaretoken]');
+            if (input && input.value) return input.value;
+            const match = document.cookie.match(/csrftoken=([^;]+)/);
+            return match ? match[1] : '';
+        }
+
+        function runSimulation() {
+            const checked = Array.from(checkboxes).filter(function (cb) {
+                return cb.checked;
+            });
+            const checkedIds = checked.map(function (cb) {
+                return parseInt(cb.value, 10);
+            });
+
+            if (resetBtn) {
+                resetBtn.style.display = checkedIds.length > 0 ? 'inline-block' : 'none';
+            }
+
+            fetch(simulateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({ skill_ids: checkedIds })
+            })
+            .then(function (res) {
+                if (!res.ok) throw new Error('Simulation failed');
+                return res.json();
+            })
+            .then(function (data) {
+                if (projectedEl) {
+                    projectedEl.textContent = Math.round(data.projected) + '%';
+                }
+                if (gainEl) {
+                    const prefix = data.gain > 0 ? '+' : '';
+                    gainEl.textContent = prefix + data.gain + '%';
+                }
+            })
+            .catch(function (err) {
+                console.error('Simulator error:', err);
+            });
+        }
+
+        checkboxes.forEach(function (cb) {
+            cb.addEventListener('change', runSimulation);
+        });
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function () {
+                checkboxes.forEach(function (cb) {
+                    cb.checked = false;
+                });
+                runSimulation();
+            });
+        }
     }());
 </script>
 {% endblock %}

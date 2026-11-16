@@ -39,6 +39,15 @@ ATTAINMENT_MAP: Dict[str, float] = {
 }
 
 
+def compute_readiness_score(weighted_sum: float, total_weight: float) -> float:
+    """
+    Computes the transparent weighted readiness percentage:
+    Readiness Score = (Sum of [Importance Weight x Attainment]) / (Sum of Applicable Weights) x 100
+    Rounded to 1 decimal place.
+    """
+    return round((weighted_sum / total_weight) * 100, 1) if total_weight else 0.0
+
+
 def run_analysis(student, job_role: Optional[JobRole] = None) -> SkillAnalysis:
     """
     Executes a complete career benchmark diagnostic for a student against a target JobRole.
@@ -249,7 +258,7 @@ def evaluate_role_readiness(
             if status in ('demonstrated', 'covered'):
                 opt_covered += 1
 
-    readiness_score = round((weighted_sum / total_weight) * 100, 1) if total_weight else 0.0
+    readiness_score = compute_readiness_score(weighted_sum, total_weight)
 
     scoring_breakdown = {
         'formula': 'Readiness Score = (Sum of [Importance Weight × Attainment]) / (Sum of Applicable Weights) × 100',

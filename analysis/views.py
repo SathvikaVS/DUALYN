@@ -1,4 +1,6 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
@@ -9,6 +11,7 @@ from recommendations.services.recommendation_engine import generate_recommendati
 from .services.progress import compare_analyses
 from .services.freshness import evidence_changed_since
 from .services.best_fit import rank_roles_for
+from .services.simulate import simulate_score
 
 
 @login_required
@@ -44,6 +47,37 @@ def refresh_analysis_view(request, pk):
     generate_recommendations(new)
     messages.success(request, f"New check created for '{analysis.job_role.title}' with your latest information.")
     return redirect('analysis:report', pk=new.pk)
+
+
+@login_required
+@require_POST
+def simulate_view(request, pk):
+    analysis = get_object_or_404(SkillAnalysis, pk=pk, student=request.user)
+
+    skill_ids = []
+    if request.body:
+        try:
+            payload = json.loads(request.body.decode('utf-8'))
+            if isinstance(payload, dict):
+                skill_ids = payload.get('skill_ids', [])
+            elif isinstance(payload, list):
+                skill_ids = payload
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            pass
+
+    if not skill_ids and request.POST:
+        skill_ids = request.POST.getlist('skill_ids') or request.POST.getlist('skill_ids[]')
+
+    projected = simulate_score(analysis, skill_ids)
+    current = round(float(analysis.readiness_score), 1)
+    projected = round(float(projected), 1)
+    gain = round(max(0.0, projected - current), 1)
+
+    return JsonResponse({
+        'current': current,
+        'projected': projected,
+        'gain': gain,
+    })
 
 
 @login_required

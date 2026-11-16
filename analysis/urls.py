@@ -8,6 +8,7 @@ urlpatterns = [
     path('run/', views.run_analysis_view, name='run'),
     path('report/<int:pk>/', views.report_view, name='report'),
     path('report/<int:pk>/refresh/', views.refresh_analysis_view, name='refresh'),
+    path('report/<int:pk>/simulate/', views.simulate_view, name='simulate'),
     path('history/', views.history_view, name='history'),
     path('compare/', views.compare_view, name='compare'),
 ]

@@ -111,6 +111,7 @@ class SmokeTests(TestCase):
             reverse('resumes:sync', kwargs={'pk': context['resume'].pk}),
             reverse('skills:sync_resume'),
             reverse('analysis:refresh', kwargs={'pk': context['analysis'].pk}),
+            reverse('analysis:simulate', kwargs={'pk': context['analysis'].pk}),
             reverse('skills:remove_skill', kwargs={'pk': context['skill'].pk}),
         ]
 
