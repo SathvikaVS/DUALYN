@@ -98,6 +98,7 @@ class SmokeTests(TestCase):
             'admin:resumes_resume_changelist',
             'admin:projects_project_changelist',
             'admin:analysis_skillanalysis_changelist',
+            'admin:analysis_sharelink_changelist',
             'admin:recommendations_learningroadmap_changelist',
             'admin:recommendations_recommendation_changelist',
             'admin:feedback_feedback_changelist',
@@ -112,6 +113,7 @@ class SmokeTests(TestCase):
             reverse('skills:sync_resume'),
             reverse('analysis:refresh', kwargs={'pk': context['analysis'].pk}),
             reverse('analysis:simulate', kwargs={'pk': context['analysis'].pk}),
+            reverse('analysis:create_share_link', kwargs={'pk': context['analysis'].pk}),
             reverse('skills:remove_skill', kwargs={'pk': context['skill'].pk}),
         ]
 

@@ -19,10 +19,12 @@ from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
 from core.views import dashboard_view
+from analysis.views import public_share_view
 
 
 urlpatterns = [
     path('', dashboard_view, name='dashboard'),
+    path('share/<str:token>/', public_share_view, name='public_share'),
     path('admin/', admin.site.urls),
     path('students/', include('students.urls')),
     path('resumes/', include('resumes.urls')),

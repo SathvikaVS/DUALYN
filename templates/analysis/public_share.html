@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ analysis.job_role.title }} — Shared Role Check — DUALYN{% endblock %}
+
+{% block extra_head %}
+<meta name="robots" content="noindex">
+{% endblock %}
+
+{% block content %}
+<div class="public-share-page">
+    <section class="card report-overview-card mb-4">
+        <div class="card-body">
+            <div class="report-overview-main">
+                <span class="section-label"><i class="bi bi-share"></i> Shared role check</span>
+                <h1>{{ analysis.job_role.title }}</h1>
+                <p>This is a read-only skills match summary for this role. Use it as a guide for what to practise next.</p>
+                {% if not link.hide_name and full_name %}
+                <span class="report-date"><i class="bi bi-person"></i> Prepared for {{ full_name }}</span>
+                {% endif %}
+            </div>
+            <div class="report-match-card">
+                <span>Skills match</span>
+                <div class="report-score">{{ readiness_score|floatformat:0 }}<small>%</small></div>
+                <div class="report-score-track" role="progressbar" aria-label="Skills match" aria-valuenow="{{ readiness_score|floatformat:0 }}" aria-valuemin="0" aria-valuemax="100">
+                    <span style="width: {{ readiness_score }}%"></span>
+                </div>
+                <small>A guide to help plan what to learn.</small>
+            </div>
+        </div>
+    </section>
+
+    <section class="report-section mb-5" aria-labelledby="skills-summary-title">
+        <header class="report-section-heading">
+            <div>
+                <span class="section-label"><i class="bi bi-grid-1x2"></i> Role competencies</span>
+                <h2 id="skills-summary-title">Required skills &amp; status</h2>
+                <p>An overview of competency coverage against role benchmarks.</p>
+            </div>
+            <span class="count-badge">{{ gaps|length }} skill{{ gaps|length|pluralize }}</span>
+        </header>
+
+        <div class="row g-3 mt-1">
+            {% for gap in gaps %}
+            <div class="col-md-6 col-lg-4">
+                <article class="card skill-result-card h-100">
+                    <div class="card-body">
+                        <div class="skill-result-heading mb-2">
+                            <div>
+                                <h3 class="h6 fw-bold mb-1">{{ gap.skill.name }}</h3>
+                                <span class="skill-required-level">Target: {{ gap.required_level|default:"Intermediate" }}</span>
+                            </div>
+                            {% if gap.status == 'demonstrated' or gap.status == 'covered' %}
+                            <span class="badge badge-status-covered">Ready</span>
+                            {% elif gap.status == 'mentioned' %}
+                            <span class="badge badge-status-mentioned">Found in resume</span>
+                            {% elif gap.status == 'needs_improvement' %}
+                            <span class="badge badge-status-needs_improvement">Practise</span>
+                            {% elif gap.status == 'not_assessed' %}
+                            <span class="badge badge-status-not_assessed">Not checked</span>
+                            {% else %}
+                            <span class="badge badge-status-missing">To learn</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="empty-state">
+                    <span class="empty-state-icon"><i class="bi bi-check-circle"></i></span>
+                    <h3>No competencies listed for this role.</h3>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% if roadmap and roadmap.items.all %}
+    <section class="report-section roadmap-section mb-4" aria-labelledby="roadmap-title">
+        <header class="report-section-heading">
+            <div>
+                <span class="section-label"><i class="bi bi-signpost-2"></i> Learning plan</span>
+                <h2 id="roadmap-title">Recommended roadmap</h2>
+                <p>A step-by-step path forward to build missing competencies.</p>
+            </div>
+        </header>
+
+        {% regroup roadmap.items.all by get_phase_display as phase_list %}
+        <div class="row g-3">
+            {% for phase in phase_list %}
+            <div class="col-md-6 col-xl-4">
+                <section class="card roadmap-phase-card h-100">
+                    <div class="card-body">
+                        <span class="roadmap-phase-number">STEP {{ forloop.counter }}</span>
+                        <h3>{{ phase.grouper }}</h3>
+                        <div class="roadmap-items">
+                            {% for item in phase.list %}
+                            <article class="roadmap-item">
+                                <h4>{{ item.skill_gap.skill.name }}</h4>
+                                {% if item.why_it_matters %}<p>{{ item.why_it_matters }}</p>{% endif %}
+                                {% if item.learning_outcome %}<p><strong>What you’ll learn:</strong> {{ item.learning_outcome }}</p>{% endif %}
+                                {% if item.task_idea %}<div class="roadmap-project"><i class="bi bi-hammer"></i><span><strong>Try building:</strong> {{ item.task_idea }}</span></div>{% endif %}
+                            </article>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </section>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

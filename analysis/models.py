@@ -1,5 +1,7 @@
+import secrets
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from jobs.models import JobRole
 from skills.models import Skill
 
@@ -47,3 +49,35 @@ class SkillGap(models.Model):
 
     def __str__(self):
         return f"{self.skill.name}: {self.status} ({self.priority})"
+
+
+def generate_share_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+class ShareLink(models.Model):
+    analysis = models.ForeignKey(SkillAnalysis, on_delete=models.CASCADE, related_name='share_links')
+    token = models.CharField(max_length=64, unique=True, db_index=True, default=generate_share_token)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    hide_name = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def is_active(self) -> bool:
+        return self.revoked_at is None and self.expires_at > timezone.now()
+
+    @property
+    def is_revoked(self) -> bool:
+        return self.revoked_at is not None
+
+    @property
+    def is_expired(self) -> bool:
+        return self.expires_at <= timezone.now()
+
+    def __str__(self):
+        status = "revoked" if self.is_revoked else ("expired" if self.is_expired else "active")
+        return f"ShareLink({self.analysis_id}, {self.token[:8]}..., {status})"

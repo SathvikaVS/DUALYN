@@ -1,17 +1,21 @@
+import datetime
 import json
+import secrets
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
+from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .forms import RunAnalysisForm
-from .models import SkillAnalysis
+from .models import SkillAnalysis, ShareLink
 from .services.gap_engine import run_analysis
 from recommendations.services.recommendation_engine import generate_recommendations
 from .services.progress import compare_analyses
 from .services.freshness import evidence_changed_since
 from .services.best_fit import rank_roles_for
 from .services.simulate import simulate_score
+from .services.unproven import unproven_claims
 
 
 @login_required
@@ -30,12 +34,21 @@ def report_view(request, pk):
     ).first()
     progress = compare_analyses(previous, analysis) if previous else None
 
+    unproven = unproven_claims(analysis)
+    active_share_links = analysis.share_links.filter(
+        revoked_at__isnull=True,
+        expires_at__gt=timezone.now()
+    )
+
     return render(request, 'analysis/report.html', {
         'analysis': analysis,
         'gaps': gaps,
         'previous': previous,
         'progress': progress,
         'is_stale': evidence_changed_since(analysis),
+        'unproven': unproven,
+        'unproven_claims': unproven,
+        'active_share_links': active_share_links,
     })
 
 
@@ -78,6 +91,99 @@ def simulate_view(request, pk):
         'projected': projected,
         'gain': gain,
     })
+
+
+@login_required
+@require_POST
+def create_share_link_view(request, pk):
+    analysis = get_object_or_404(SkillAnalysis, pk=pk, student=request.user)
+
+    days_str = request.POST.get('days', '7')
+    try:
+        days = int(days_str)
+        if days not in (7, 14, 30):
+            days = 7
+    except (ValueError, TypeError):
+        days = 7
+
+    if 'hide_name_submitted' in request.POST:
+        hide_name = ('hide_name' in request.POST)
+    else:
+        raw_hide_name = request.POST.get('hide_name')
+        if raw_hide_name is None:
+            hide_name = True
+        elif isinstance(raw_hide_name, bool):
+            hide_name = raw_hide_name
+        else:
+            hide_name = str(raw_hide_name).lower() not in ('false', '0', 'off')
+
+    token = secrets.token_urlsafe(32)
+    expires_at = timezone.now() + datetime.timedelta(days=days)
+    ShareLink.objects.create(
+        analysis=analysis,
+        token=token,
+        expires_at=expires_at,
+        hide_name=hide_name,
+    )
+    messages.success(request, f"Private share link created (valid for {days} days).")
+    return redirect('analysis:report', pk=analysis.pk)
+
+
+@login_required
+@require_POST
+def revoke_share_link_view(request, pk=None, token=None):
+    if pk is not None:
+        link = get_object_or_404(ShareLink, pk=pk, analysis__student=request.user)
+    elif token is not None:
+        link = get_object_or_404(ShareLink, token=token, analysis__student=request.user)
+    else:
+        link_id = request.POST.get('pk') or request.POST.get('link_id')
+        link_token = request.POST.get('token')
+        if link_id:
+            link = get_object_or_404(ShareLink, pk=link_id, analysis__student=request.user)
+        elif link_token:
+            link = get_object_or_404(ShareLink, token=link_token, analysis__student=request.user)
+        else:
+            raise Http404("Share link not found.")
+
+    link.revoked_at = timezone.now()
+    link.save(update_fields=['revoked_at'])
+    messages.success(request, "Share link has been revoked.")
+    return redirect('analysis:report', pk=link.analysis.pk)
+
+
+def public_share_view(request, token):
+    link = get_object_or_404(
+        ShareLink.objects.select_related('analysis__job_role', 'analysis__student'),
+        token=token
+    )
+    if link.revoked_at is not None or link.expires_at <= timezone.now():
+        raise Http404("This share link has expired or been revoked.")
+
+    analysis = link.analysis
+    gaps = analysis.gaps.select_related('skill').order_by('status', '-priority')
+    roadmap = getattr(analysis, 'roadmap', None)
+
+    full_name = None
+    if not link.hide_name:
+        profile = getattr(analysis.student, 'student_profile', None)
+        if profile and profile.Full_name and profile.Full_name.strip():
+            full_name = profile.Full_name.strip()
+        else:
+            full_name = analysis.student.get_full_name() or ""
+
+    context = {
+        'link': link,
+        'analysis': analysis,
+        'job_role': analysis.job_role,
+        'readiness_score': analysis.readiness_score,
+        'gaps': gaps,
+        'roadmap': roadmap,
+        'full_name': full_name,
+    }
+    response = render(request, 'analysis/public_share.html', context)
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 @login_required
